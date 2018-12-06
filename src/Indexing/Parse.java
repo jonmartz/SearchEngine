@@ -1,3 +1,6 @@
+package Indexing;
+
+import Models.Doc;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -78,10 +81,10 @@ public class Parse {
     }
 
     /**
-     * Parse all the documents from file in file_path. Gets a Doc array from ReadFile where each Doc.lines
-     * is a list of the lines in doc, but each Doc.terms is still null.
+     * Indexing.Parse all the documents from file in file_path. Gets a Models.Doc array from Indexing.ReadFile where each Models.Doc.lines
+     * is a list of the lines in doc, but each Models.Doc.terms is still null.
      * @param docString String of doc to be parsed (contains all tags between <DOC> and </DOC> including that tag)
-     * @return array of Docs where each Doc.terms is the list of the doc's terms
+     * @return array of Docs where each Models.Doc.terms is the list of the doc's terms
      */
     public Doc getParsedDoc(String docString) {
 
@@ -192,7 +195,7 @@ public class Parse {
     }
 
     /**
-     * Save the Doc's title, adding the words from the title to the tokens list.
+     * Save the Models.Doc's title, adding the words from the title to the tokens list.
      * @param line of title
      * @param doc to save title to
      * @param gotCity to know if we need to skip the first term in terms (if its the city)

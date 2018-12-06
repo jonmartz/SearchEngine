@@ -1,5 +1,7 @@
+package Indexing;
+
 /**
- * PorterStemmer class taken from opennlp-tools-1.9.0.jar.
+ * Indexing.PorterStemmer class taken from opennlp-tools-1.9.0.jar.
  * We only needed this class from that jar so it wasn't needed to bring the whole jar.
  */
 public class PorterStemmer {

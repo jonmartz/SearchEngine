@@ -1,4 +1,4 @@
-
+package Models;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -9,7 +9,7 @@ import java.util.LinkedList;
 public class Doc {
 
     /**
-     * Doc name (unique)
+     * Models.Doc name (unique)
      */
     public String name = "";
     /**

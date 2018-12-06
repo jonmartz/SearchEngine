@@ -1,3 +1,6 @@
+package GUI;
+
+import Indexing.Indexer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -57,7 +60,7 @@ public class Controller implements Initializable {
      */
     private String indexPath;
     /**
-     * Indexer to make index
+     * Indexing.Indexer to make index
      */
     private Indexer indexer;
     /**

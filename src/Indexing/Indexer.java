@@ -1,3 +1,8 @@
+package Indexing;
+
+import Models.Cities;
+import Models.Doc;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -86,7 +91,7 @@ public class Indexer {
     }
 
     /**
-     * Constructor. Creating a Indexer doesn't start the indexing process
+     * Constructor. Creating a Indexing.Indexer doesn't start the indexing process
      * @param index_path path of index directory
      */
     public Indexer(String index_path) throws IOException {
