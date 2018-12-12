@@ -6,10 +6,13 @@
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -18,9 +21,9 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<GridPane alignment="center" hgap="10" vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.Controller">
+<GridPane alignment="center" hgap="10" prefHeight="454.0" prefWidth="830.0" vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.Controller">
     <children>
-        <BorderPane prefHeight="250.0" prefWidth="789.0">
+        <BorderPane prefHeight="217.0" prefWidth="851.0">
             <left>
                 <VBox prefHeight="225.0" prefWidth="164.0" BorderPane.alignment="CENTER">
                     <children>
@@ -89,11 +92,11 @@
                 </MenuBar>
             </top>
             <center>
-                <GridPane prefHeight="225.0" prefWidth="267.0" BorderPane.alignment="CENTER">
+                <GridPane prefHeight="192.0" prefWidth="303.0" BorderPane.alignment="CENTER">
                     <columnConstraints>
                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="162.0" minWidth="10.0" prefWidth="133.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="204.0" minWidth="10.0" prefWidth="104.0" />
-                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="204.0" minWidth="0.0" prefWidth="10.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="204.0" minWidth="10.0" prefWidth="150.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="204.0" minWidth="0.0" prefWidth="5.0" />
                     </columnConstraints>
                     <rowConstraints>
                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -123,13 +126,13 @@
                                 <Font name="System Bold" size="12.0" />
                             </font>
                         </Text>
-                        <Button fx:id="dictionaryViewButton" mnemonicParsing="false" onAction="#viewDictionary" style="-fx-background-color: #2A5058;" text="View dictionary" textFill="WHITE" GridPane.rowIndex="5" />
+                        <Button fx:id="dictionaryViewButton" mnemonicParsing="false" onAction="#viewDictionary" prefHeight="25.0" prefWidth="108.0" style="-fx-background-color: #2A5058;" text="View dictionary" textFill="WHITE" GridPane.rowIndex="5" />
                         <Button fx:id="resetButton" mnemonicParsing="false" onAction="#resetIndex" style="-fx-background-color: #B22222;" text="Reset index" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                         <Text fill="#646464" strokeType="OUTSIDE" strokeWidth="0.0" text="Index stats:" />
                         <Separator prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="4" />
-                        <Separator halignment="RIGHT" orientation="VERTICAL" prefHeight="200.0" GridPane.columnIndex="2" GridPane.rowSpan="7">
+                        <Separator halignment="RIGHT" orientation="VERTICAL" prefHeight="200.0" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowSpan="7">
                             <GridPane.margin>
-                                <Insets left="10.0" />
+                                <Insets left="10.0" top="5.0" />
                             </GridPane.margin>
                         </Separator>
                         <Text fx:id="commentsBox" fill="GREEN" strokeType="OUTSIDE" strokeWidth="0.0" text="CommentsBox" GridPane.rowIndex="6" />
@@ -140,19 +143,154 @@
                 </GridPane>
             </center>
             <right>
-                <TableView fx:id="dictionaryView" prefHeight="225.0" prefWidth="362.0" BorderPane.alignment="CENTER">
+                <TableView fx:id="dictionaryView" prefHeight="192.0" prefWidth="342.0" BorderPane.alignment="CENTER">
                     <columns>
-                        <TableColumn fx:id="termColumn" prefWidth="167.0" text="Term" />
-                        <TableColumn fx:id="dfColumn" prefWidth="96.0" text="Df" />
-                        <TableColumn fx:id="cfColumn" minWidth="0.0" prefWidth="98.0" text="Cf" />
+                        <TableColumn fx:id="termColumn" prefWidth="180.0" text="Term" />
+                        <TableColumn fx:id="dfColumn" text="Df" />
+                        <TableColumn fx:id="cfColumn" minWidth="0.0" text="Cf" />
                     </columns>
+               <BorderPane.margin>
+                  <Insets right="5.0" />
+               </BorderPane.margin>
                 </TableView>
             </right></BorderPane>
+      <Separator prefWidth="200.0" GridPane.rowIndex="1">
+         <GridPane.margin>
+            <Insets left="5.0" right="5.0" />
+         </GridPane.margin></Separator>
+      <BorderPane fx:id="queryPane" prefHeight="212.0" prefWidth="857.0" GridPane.rowIndex="2">
+         <left>
+            <GridPane prefHeight="212.0" prefWidth="364.0" BorderPane.alignment="CENTER">
+              <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="182.0" minWidth="25.0" prefWidth="27.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="407.0" minWidth="120.0" prefWidth="117.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="407.0" minWidth="120.0" prefWidth="27.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="398.0" minWidth="10.0" prefWidth="398.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="241.0" minWidth="10.0" prefWidth="10.0" />
+              </columnConstraints>
+              <rowConstraints>
+                  <RowConstraints minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <TextField fx:id="queryTextField" promptText="Enter a query here" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1">
+                     <GridPane.margin>
+                        <Insets right="5.0" />
+                     </GridPane.margin></TextField>
+                  <RadioButton fx:id="queryTextCheckBox" disable="true" mnemonicParsing="false" onAction="#queryTextChecked" selected="true" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                  <RadioButton fx:id="queryFileCheckBox" mnemonicParsing="false" onAction="#queryFileChecked" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
+                  <Button fx:id="queryFileButton" disable="true" mnemonicParsing="false" onAction="#getQueryFilePath" prefHeight="25.0" prefWidth="114.0" text="Query file path" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                     <GridPane.margin>
+                        <Insets right="5.0" />
+                     </GridPane.margin></Button>
+                  <Separator orientation="VERTICAL" prefHeight="200.0" prefWidth="57.0" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowSpan="6" />
+                  <Button fx:id="RUNButton" disable="true" mnemonicParsing="false" onAction="#RUN" prefHeight="25.0" prefWidth="140.0" style="-fx-background-color: #2A5058;" text="RUN" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                     <GridPane.margin>
+                        <Insets right="5.0" />
+                     </GridPane.margin></Button>
+                  <CheckBox fx:id="semanticsCheckBox" mnemonicParsing="false" text="Use Semantics" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
+                  <MenuButton fx:id="citiesMenu" mnemonicParsing="false" prefHeight="25.0" prefWidth="124.0" text="Cities" GridPane.columnIndex="3" GridPane.rowIndex="2">
+                     <GridPane.margin>
+                        <Insets right="5.0" />
+                     </GridPane.margin>
+                  </MenuButton>
+                  <Text fill="#646464" strokeType="OUTSIDE" strokeWidth="0.0" text="Queries:" />
+                  <Text fx:id="commentsQueryBox" fill="GREEN" strokeType="OUTSIDE" strokeWidth="0.0" text="CommentsBox" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <Button fx:id="saveResultsButton" disable="true" mnemonicParsing="false" onAction="#saveResults" prefHeight="25.0" prefWidth="156.0" text="Save Results" GridPane.columnIndex="2" GridPane.rowIndex="3">
+                     <GridPane.margin>
+                        <Insets right="5.0" />
+                     </GridPane.margin>
+                  </Button>
+               </children>
+               <BorderPane.margin>
+                  <Insets left="5.0" />
+               </BorderPane.margin>
+            </GridPane>
+         </left>
+         <right>
+            <BorderPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <center>
+                  <TableView fx:id="entitiesTable" prefHeight="184.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                    <columns>
+                      <TableColumn fx:id="entitiesRankCol" prefWidth="39.0" text="Rank" />
+                      <TableColumn fx:id="entitiesEntityCol" prefWidth="156.0" text="Entity" />
+                    </columns>
+                  </TableView>
+               </center>
+               <top>
+                  <GridPane prefHeight="26.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                    <columnConstraints>
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="104.0" minWidth="10.0" prefWidth="102.0" />
+                      <ColumnConstraints hgrow="SOMETIMES" maxWidth="124.0" minWidth="10.0" prefWidth="98.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                    </rowConstraints>
+                     <children>
+                        <Text fx:id="entitiesDocIDText" strokeType="OUTSIDE" strokeWidth="0.0" text="DocID" visible="false" GridPane.columnIndex="1">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Text>
+                        <Text fill="#646464" strokeType="OUTSIDE" strokeWidth="0.0" text="Dominant Entities:" />
+                     </children>
+                     <padding>
+                        <Insets left="5.0" />
+                     </padding>
+                  </GridPane>
+               </top>
+            </BorderPane>
+         </right>
+         <GridPane.margin>
+            <Insets bottom="5.0" right="5.0" />
+         </GridPane.margin>
+         <center>
+            <BorderPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+               <top>
+                  <GridPane prefHeight="26.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="104.0" minWidth="10.0" prefWidth="102.0" />
+                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="124.0" minWidth="10.0" prefWidth="98.0" />
+                     </columnConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                     </rowConstraints>
+                     <children>
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" GridPane.columnIndex="1">
+                           <font>
+                              <Font name="System Bold" size="12.0" />
+                           </font>
+                        </Text>
+                        <Text fill="#646464" strokeType="OUTSIDE" strokeWidth="0.0" text="Query Results:" />
+                     </children>
+                     <padding>
+                        <Insets left="5.0" />
+                     </padding>
+                  </GridPane>
+               </top>
+               <center>
+                  <TableView fx:id="queryResultsTable" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                    <columns>
+                      <TableColumn fx:id="queryResultsRankCol" prefWidth="39.0" text="Rank" />
+                      <TableColumn fx:id="queryResultsDocCol" prefWidth="128.0" text="Document" />
+                        <TableColumn fx:id="buttonColumn" prefWidth="88.0" text="Entities" />
+                    </columns>
+                  </TableView>
+               </center>
+            </BorderPane>
+         </center>
+      </BorderPane>
     </children>
     <columnConstraints>
         <ColumnConstraints />
     </columnConstraints>
     <rowConstraints>
-        <RowConstraints />
+        <RowConstraints maxHeight="1.7976931348623157E308" percentHeight="50.0" />
+      <RowConstraints maxHeight="1.7976931348623157E308" prefHeight="2.0" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="36.0" percentHeight="50.0" />
     </rowConstraints>
 </GridPane>

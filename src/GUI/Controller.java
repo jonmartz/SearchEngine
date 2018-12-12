@@ -8,9 +8,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 
 import java.io.*;
 import java.net.URL;
@@ -28,8 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Controller implements Initializable {
 
     @FXML
-    public Text corpusPathOKText; // shows when corpus path has been selected
-    public Text indexPathOKText; // shows when index path has been selected
+    public Text corpusPathOKText; // shows when corpus indexPath has been selected
+    public Text indexPathOKText; // shows when index indexPath has been selected
     public CheckBox useStemming; // to use stemming
     public Button createIndexButton; // to create index
     public Text commentsBox; // shows all kinds of comments
@@ -51,12 +53,33 @@ public class Controller implements Initializable {
     public Button corpusPathButton;
     public Button indexPathButton;
 
+    // queries part
+    @FXML
+    public BorderPane queryPane;
+    public TextField queryTextField;
+    public RadioButton queryTextCheckBox;
+    public RadioButton queryFileCheckBox;
+    public Button queryFileButton;
+    public Button RUNButton;
+    public CheckBox semanticsCheckBox;
+    public Text commentsQueryBox;
+    public Button saveResultsButton;
+    public MenuButton citiesMenu;
+    public TableView entitiesTable;
+    public TableColumn entitiesRankCol;
+    public TableColumn entitiesEntityCol;
+    public Text entitiesDocIDText;
+    public TableView queryResultsTable;
+    public TableColumn queryResultsRankCol;
+    public TableColumn queryResultsDocCol;
+    public TableColumn buttonColumn;
+
     /**
-     * path of the corpus directory
+     * indexPath of the corpus directory
      */
     private String corpusPath;
     /**
-     * path of the index directory
+     * indexPath of the index directory
      */
     private String indexPath;
     /**
@@ -75,6 +98,10 @@ public class Controller implements Initializable {
      * dictionary to hold in memory
      */
     private ConcurrentHashMap<String, long[]> dictionary;
+    /**
+     * indexPath of the queries file
+     */
+    private String queriesFilePath;
 
     /**
      * Initializes the controller.
@@ -90,7 +117,7 @@ public class Controller implements Initializable {
     /**
      * Opens a "browse" window for the user to choose a directory.
      * @param title of browse window
-     * @return path of directory chosen
+     * @return indexPath of directory chosen
      */
     private String getDirectoryPath(String title) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -101,7 +128,7 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Gets the path of the corpus directory
+     * Gets the indexPath of the corpus directory
      */
     public void getCorpusPath() {
         String path = getDirectoryPath("Select corpus directory");
@@ -114,7 +141,7 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Gets the path of the index directory
+     * Gets the indexPath of the index directory
      */
     public void getIndexPath() {
         String path  = getDirectoryPath("Select index directory");
@@ -136,14 +163,14 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Loads into memory the dictionary from the index that's in the index path. If there's no such index
+     * Loads into memory the dictionary from the index that's in the index indexPath. If there's no such index
      * then a message is displayed.
-     * If "use stemming" is checked, will load the dicitonary from the "withStemming" path, else from
-     * the "withoutStemming" path.
+     * If "use stemming" is checked, will load the dicitonary from the "withStemming" indexPath, else from
+     * the "withoutStemming" indexPath.
      */
     public void loadDictionary() {
         try{
-            showComment("GREEN", "Loading dictionary...");
+            showComment(commentsBox,"GREEN", "Loading dictionary...");
             statsVisible(false);
             dictionaryView.setItems(null);
 
@@ -156,7 +183,6 @@ public class Controller implements Initializable {
             double documentCount = Double.parseDouble(line.split("=")[1]);
             reader.close();
 
-//            dictionary = new HashMap<>();
             dictionary = new ConcurrentHashMap<>();
             reader = new BufferedReader(new FileReader(new File(path + "\\dictionary")));
             while ((line = reader.readLine()) != null){
@@ -171,7 +197,8 @@ public class Controller implements Initializable {
             reader.close();
 
             setLanguages(path);
-            commentsBox.setText("Finished!");
+            setCities(path);
+            showComment(commentsBox,"GREEN","Finished!");
             DecimalFormat formatter = new DecimalFormat("#,###");
             docCountValue.setText(formatter.format(documentCount));
             termCountValue.setText(formatter.format(dictionary.size()));
@@ -182,7 +209,7 @@ public class Controller implements Initializable {
         } catch (Exception e) {
 //            e.printStackTrace();
             dictionary = null;
-            showComment("RED", e.getMessage());
+            showComment(commentsBox,"RED", e.getMessage());
         }
     }
 
@@ -192,35 +219,35 @@ public class Controller implements Initializable {
     private void setLanguages(String path) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(new File(path + "\\languages")));
         String line = "";
-        while ((line = reader.readLine()) != null){
-            languageChoicebox.getItems().add(line);
-        }
+        languageChoicebox.getItems().clear();
+        ObservableList items = languageChoicebox.getItems();
+        while ((line = reader.readLine()) != null) items.add(line);
     }
 
     /**
-     * Creates the index of corpus from corpus that in index path, using the stop-words
-     * from the corpus path. If there's already a completed index in the path, it replaces it.
-     * If "use stemming" is checked, will create the index in the "withStemming" path, else from
-     * the "withoutStemming" path.
+     * Creates the index of corpus from corpus that in index indexPath, using the stop-words
+     * from the corpus indexPath. If there's already a completed index in the indexPath, it replaces it.
+     * If "use stemming" is checked, will create the index in the "withStemming" indexPath, else from
+     * the "withoutStemming" indexPath.
      */
     public void createIndex() {
         try{
             // Get index path
-            String indexPath = "";
-            if (useStemming.isSelected()) indexPath = this.indexPath + "\\WithStemming";
-            else indexPath = this.indexPath + "\\WithoutStemming";
+            String path = "";
+            if (useStemming.isSelected()) path = this.indexPath + "\\WithStemming";
+            else path = this.indexPath + "\\WithoutStemming";
 
             // In case index already exists
-            if (Files.exists(Paths.get(indexPath))) {
+            if (Files.exists(Paths.get(path))) {
                 String text = "Index already exists in folder. Do you want to delete it?";
                 if (getResultFromWarning(text) == ButtonType.NO) return;
             }
 
-            indexer = new Indexer(indexPath);
+            indexer = new Indexer(path);
             dictionary = null;
 
             // Modify GUI
-            showComment("GREEN", "Creating index...");
+            showComment(commentsBox,"GREEN", "Creating index...");
             statsVisible(false);
             dictionaryView.setItems(null);
 
@@ -237,7 +264,7 @@ public class Controller implements Initializable {
             thread.start();
         } catch (Exception e) {
             indexer = null;
-            showComment("RED", e.getMessage());
+            showComment(commentsBox,"RED", e.getMessage());
         }
     }
 
@@ -248,7 +275,8 @@ public class Controller implements Initializable {
         double totalTime = (System.currentTimeMillis() - startingTime)/1000;
         dictionary = indexer.getDictionary();
         languageChoicebox.setItems(FXCollections.observableArrayList(indexer.getLanguages()));
-        commentsBox.setText("Finished!");
+        setCities(indexer.getCities());
+        showComment(commentsBox,"GREEN","Finished!");
         DecimalFormat formatter = new DecimalFormat("#,###");
         docCountValue.setText(formatter.format(indexer.documentCount));
         termCountValue.setText(formatter.format(indexer.dictionarySize));
@@ -272,10 +300,10 @@ public class Controller implements Initializable {
      * @param color of comment
      * @param text of comment
      */
-    private void showComment(String color, String text) {
-        commentsBox.setFill(Paint.valueOf(color));
-        commentsBox.setText(text);
-        commentsBox.setVisible(true);
+    private void showComment(Text comments, String color, String text) {
+        comments.setFill(Paint.valueOf(color));
+        comments.setText(text);
+        comments.setVisible(true);
     }
 
     /**
@@ -294,6 +322,9 @@ public class Controller implements Initializable {
         resetButton.setVisible(visibility);
         dictionaryView.setVisible(false);
         dictionaryViewButton.setDisable(false);
+
+        // queries
+        queryPane.setVisible(visibility);
     }
 
     /**
@@ -355,15 +386,15 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Erase he index in index path (both with and without stemming)
+     * Erase he index in index indexPath (both with and without stemming)
      * and remove the dictionary from memory.
      */
     public void resetIndex() {
-//        String path;
-//        if (useStemming.isSelected()) path = indexPath + "\\WithStemming";
-//        else path = indexPath + "\\WithoutStemming";
+//        String indexPath;
+//        if (useStemming.isSelected()) indexPath = indexPath + "\\WithStemming";
+//        else indexPath = indexPath + "\\WithoutStemming";
         try {
-//            Path directory = Paths.get(path);
+//            Path directory = Paths.get(indexPath);
             Path directory = Paths.get(indexPath);
 
             // In case index already exists
@@ -382,5 +413,114 @@ public class Controller implements Initializable {
             commentsBox.setFill(Paint.valueOf("RED"));
             commentsBox.setText("Couldn't delete index!");
         }
+    }
+
+    //                                             -------- QUERIES --------
+
+    /**
+     * Get the indexPath of the queries file
+     */
+    public void getQueryFilePath() {
+        String path = getFilePath("Select queries file");
+        if (path != null){
+            queriesFilePath = path;
+            queryFileButton.setTooltip(new Tooltip(queriesFilePath));
+            RUNButton.setDisable(false);
+        }
+    }
+
+    /**
+     * Opens a "browse" window for the user to choose a file.
+     * @param title of browse window
+     * @return indexPath of file chosen
+     */
+    private String getFilePath(String title) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(title);
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) return file.getAbsolutePath();
+        return null;
+    }
+
+
+    /**
+     * Save the query results in the desired folder. The file's name will be "QueryResults.txt"
+     */
+    public void saveResults() {
+        //todo: implement
+    }
+
+    /**
+     * Execute the search and ranking of documents relevant to query (or queries in query file),
+     * and display results in GUI.
+     */
+    public void RUN() {
+        //todo: implement
+    }
+
+    /**
+     * Is called when the query text box is clicked. Switches to query text method
+     */
+    public void queryTextChecked() {
+        if (queryTextCheckBox.isSelected()) {
+            queryTextCheckBox.setDisable(true);
+            queryTextField.setDisable(false);
+
+            queryFileCheckBox.setDisable(false);
+            queryFileButton.setDisable(true);
+
+            queryFileCheckBox.fire();
+        }
+    }
+
+    /**
+     * Is called when the query file box is clicked. Switches to query file method
+     */
+    public void queryFileChecked() {
+        if (queryFileCheckBox.isSelected()) {
+            queryTextCheckBox.setDisable(false);
+            queryTextField.setDisable(true);
+
+            queryFileCheckBox.setDisable(true);
+            queryFileButton.setDisable(false);
+
+            queryTextCheckBox.fire();
+        }
+    }
+
+    /**
+     * Get all countries from city index FILE and add them to the country menu.
+     */
+    public void setCities(String path) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(new File(path + "\\cities")));
+        String line = "";
+        citiesMenu.getItems().clear();
+        ObservableList items = citiesMenu.getItems();
+        while ((line = reader.readLine()) != null) {
+            String city = line.split("\\|")[0].trim();
+            if (!city.isEmpty()) items.add(new CheckMenuItem(city));
+        }
+    }
+
+    /**
+     * Add all countries in the set to the country menu.
+     */
+    private void setCities(SortedSet<String> cities) {
+        citiesMenu.getItems().clear();
+        ObservableList items = citiesMenu.getItems();
+        for (String city : cities) items.add(new CheckMenuItem(city));
+    }
+
+    /**
+     * Get a list of all the cities selected in the cities menu
+     * @return list of selected cities
+     */
+    public HashSet<String> getSelectedCities(){
+        HashSet<String> selectedCities = new HashSet<>();
+        for (MenuItem menuItem : citiesMenu.getItems()){
+            CheckMenuItem checkMenuItem = (CheckMenuItem)menuItem;
+            if (checkMenuItem.isSelected()) selectedCities.add(checkMenuItem.getText());
+        }
+        return selectedCities;
     }
 }

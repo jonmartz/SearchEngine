@@ -85,9 +85,20 @@ public class Indexer {
      */
     private SortedSet<String> languages;
 
-
+    /**
+     * getter
+     * @return all languages in index
+     */
     public SortedSet<String> getLanguages() {
         return languages;
+    }
+
+    /**
+     * getter
+     * @return all cities in index
+     */
+    public SortedSet<String> getCities() {
+        return new TreeSet<>(cityIndex.keySet());
     }
 
     /**
@@ -250,7 +261,7 @@ public class Indexer {
 
         // Free up memory for merging
         documentIndex.clear();
-        cityIndex.clear();
+//        cityIndex.clear(); todo: clear
 
         long mergeStart = System.currentTimeMillis();
 
