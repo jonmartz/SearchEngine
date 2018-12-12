@@ -705,4 +705,20 @@ public class Parse {
             return "";
         }
     }
+
+    //          ----- queries ----
+
+    /**
+     * Parse a sentence and get a list of all the terms
+     * @param sentence to parse
+     * @return list of terms
+     */
+    public LinkedList<String> getParsedSentence(String sentence){
+        tokens = new LinkedList<>();
+        terms = new LinkedList<>();
+        tokenize(sentence);
+        Doc doc = new Doc(); // only for holding terms
+        setTerms(doc);
+        return doc.terms;
+    }
 }

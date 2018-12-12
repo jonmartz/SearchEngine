@@ -105,7 +105,7 @@ public class Indexer {
      * Constructor. Creating a Indexing.Indexer doesn't start the indexing process
      * @param index_path path of index directory
      */
-    public Indexer(String index_path) throws IOException {
+    public Indexer(String index_path) {
         this.index_path = index_path;
         this.citiesDictionary = Cities.get_cities_dictionary();
         this.months = getMonths();
@@ -208,7 +208,7 @@ public class Indexer {
         this.useStemming = useStemming;
 
         String stopWordsName = "stop_words.txt";
-        stopWords = getStopWords(corpusPath, stopWordsName);
+        stopWords = getStopWords(corpusPath, stopWordsName, index_path);
         documentIndex = new LinkedBlockingDeque<>();
         dictionary = new ConcurrentHashMap<>();
         cityIndex = new ConcurrentHashMap<>();
@@ -310,20 +310,31 @@ public class Indexer {
     }
 
     /**
-     * Gets a text with stop-words and returns a set of them
+     * Gets a text with stop-words and returns a set of them, while saving the stop words in index
      * @param corpusPath path of corpus
      * @param stopWordsName name of file
      * @return stop words set
      */
-    private static HashSet<String> getStopWords(String corpusPath, String stopWordsName) throws IOException {
-        String path = corpusPath + "\\" + stopWordsName;
+    private static HashSet<String> getStopWords(String corpusPath, String stopWordsName, String indexPath) throws IOException {
+
+        // set input
+        String inputPath = corpusPath + "\\" + stopWordsName;
         BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(path), StandardCharsets.UTF_8));
+                new FileInputStream(inputPath), StandardCharsets.UTF_8));
+
+        // set output
+        String outputPath = indexPath + "\\stopWords";
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(outputPath, true)));
+
+        // get stopwords and write them to disk
         HashSet<String> stopWords = new HashSet<>();
         String line;
         while ((line = reader.readLine()) != null) {
+            out.write(line + "\n");
             stopWords.add(line.trim());
         }
+        out.close();
         return stopWords;
     }
 
@@ -687,5 +698,20 @@ public class Indexer {
         out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.join("\\", languagesPath), true)));
         for (String line : languages) out.write(line + "\n");
         out.close();
+    }
+
+    //      ----- query part -----
+
+    /**
+     * Parse a sentence and get a list of all the terms
+     * @param sentence to parse
+     * @param stopWords list of stop words
+     * @param useStemming true to use stemming
+     * @return list of terms
+     */
+    public LinkedList<String> getParsedSentence(String sentence, HashSet<String> stopWords, boolean useStemming){
+        Parse parser = new Parse(stopWords, citiesDictionary, cityIndex, months,
+                stemCollection, stopSuffixes, stopPrefixes, useStemming);
+        return parser.getParsedSentence(sentence);
     }
 }

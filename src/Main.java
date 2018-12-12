@@ -6,6 +6,12 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
+    /*
+    todo: things changed in indexing:
+    1) stop words are now saved in index
+    2) added getParsedSentence to indexer AND parser
+    */
+
     @Override
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("GUI/View.fxml"));

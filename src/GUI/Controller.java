@@ -1,6 +1,7 @@
 package GUI;
 
 import Indexing.Indexer;
+import Retrieval.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -174,9 +175,7 @@ public class Controller implements Initializable {
             statsVisible(false);
             dictionaryView.setItems(null);
 
-            String path;
-            if (useStemming.isSelected()) path = indexPath + "\\WithStemming";
-            else path = indexPath + "\\WithoutStemming";
+            String path = getIndexFullPath();
 
             BufferedReader reader = new BufferedReader(new FileReader(new File(path + "\\documents")));
             String line = reader.readLine();
@@ -214,6 +213,15 @@ public class Controller implements Initializable {
     }
 
     /**
+     * Get the full path of index, taking into account if useStemming is true / false
+     * @return full path
+     */
+    private String getIndexFullPath() {
+        if (useStemming.isSelected()) return indexPath + "\\WithStemming";
+        else return indexPath + "\\WithoutStemming";
+    }
+
+    /**
      * Add languages from the language index to the list of available languages.
      */
     private void setLanguages(String path) throws IOException {
@@ -232,10 +240,7 @@ public class Controller implements Initializable {
      */
     public void createIndex() {
         try{
-            // Get index path
-            String path = "";
-            if (useStemming.isSelected()) path = this.indexPath + "\\WithStemming";
-            else path = this.indexPath + "\\WithoutStemming";
+            String path = getIndexFullPath();
 
             // In case index already exists
             if (Files.exists(Paths.get(path))) {
@@ -455,7 +460,23 @@ public class Controller implements Initializable {
      * and display results in GUI.
      */
     public void RUN() {
-        //todo: implement
+        try {
+            ArrayList<String> rankedDocuments = new ArrayList<>();
+            Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities());
+
+            // if the query entering method is by entering it in the text field (single query)
+            if (queryTextCheckBox.isSelected()) {
+                String query = queryTextField.getText();
+                rankedDocuments = searcher.getRankedDocuments(query, useStemming.isSelected());
+            }
+
+            //  if the query entering method is by selecting a query file (multiple queries)
+            else {
+                // todo: ask what the heck they expect to happen here
+            }
+        }catch (IOException e) {
+            showComment(commentsBox,"RED", e.getMessage());
+        }
     }
 
     /**
