@@ -179,7 +179,7 @@ public class Controller implements Initializable {
 
             BufferedReader reader = new BufferedReader(new FileReader(new File(path + "\\documents")));
             String line = reader.readLine();
-            double documentCount = Double.parseDouble(line.split("=")[1]);
+            double documentCount = Double.parseDouble(line.split(",")[0]); // todo: get doc avg length
             reader.close();
 
             dictionary = new ConcurrentHashMap<>();
@@ -461,7 +461,7 @@ public class Controller implements Initializable {
      */
     public void RUN() {
         try {
-            ArrayList<String> rankedDocuments = new ArrayList<>();
+            PriorityQueue<Map.Entry<String, Double>> rankedDocuments = null;
             Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities());
 
             // if the query entering method is by entering it in the text field (single query)
@@ -544,4 +544,6 @@ public class Controller implements Initializable {
         }
         return selectedCities;
     }
+
+    // todo: add ranked docs class
 }

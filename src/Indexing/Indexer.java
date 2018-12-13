@@ -678,22 +678,28 @@ public class Indexer {
 
     /**
      * Writes the documents' index to disk, and add all document languages to the language index.
+     * First line of documents file is: docCount,avgDocLength
      */
     private void writeDocumentsAndLanguagesIndex() throws IOException {
         String[] documentsPath = {index_path, "documents"};
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(String.join("\\", documentsPath), true)));
         SortedSet<String> lines = new TreeSet<>(documentIndex);
-        out.write("-documentCount=" + (int)documentCount + "\n");
+        double sumOfDocLengths = 0;
         for (String line : lines){
             String[] data = line.split("\\|");
             String language = data[6].trim();
-            if (language.length() > 0) {
-                languages.add(language);
-            }
-            out.write(line);
+            if (language.length() > 0) languages.add(language);
+            sumOfDocLengths += Double.valueOf(data[3]);
         }
+
+        // write docs index
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(String.join("\\", documentsPath), true)));
+        // first line is: docCount,avgDocLength
+        out.write((int)documentCount + "," + sumOfDocLengths/documentCount + "\n");
+        for (String line : lines) out.write(line);
         out.close();
+
+        // write languages index
         String[] languagesPath = {index_path, "languages"};
         out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.join("\\", languagesPath), true)));
         for (String line : languages) out.write(line + "\n");
