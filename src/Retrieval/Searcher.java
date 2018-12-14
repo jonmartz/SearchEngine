@@ -163,6 +163,7 @@ public class Searcher {
         // Get term's dictionary entry
         long[] termData = new long[3];
         term = getTermDataAndFixTermCase(term, termData);
+        if (term == null) return; // term not in dictionary!
         String df = String.valueOf(termData[0]);
 
         // put the term's data in the dictionary (term, df, qf, positionsInQuery)
@@ -215,7 +216,7 @@ public class Searcher {
             term = term.toLowerCase();
             termData = dictionary.get(term);
         }
-        if (termData == null) return null; // term is not in dictionary! todo: add case in parent
+        if (termData == null) return null; // term is not in dictionary!
         else {
             termDataPointer[0] = termData[0];
             termDataPointer[1] = termData[1];

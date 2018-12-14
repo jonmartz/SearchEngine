@@ -23,7 +23,6 @@ public class Ranker {
     public SortedSet<Map.Entry<String, Double>> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
                                                                    HashMap<String, String[]> documents,
                                                                    int K, double b, int docCount, int avgDocLength) {
-
         HashMap<String, Double> documentsMap = new HashMap<>();
         for (ArrayList<String[]> posting : postings) {
             String[] termData = posting.get(0);
@@ -57,7 +56,7 @@ public class Ranker {
      * @param b             normalizer
      * @return              BM25 calculation
      */
-    double BM25(double tf, double docCount, double docLength, double avgDocLength, double qf, double df, double K, double b) {
+    private double BM25(double tf, double docCount, double docLength, double avgDocLength, double qf, double df, double K, double b) {
         double numerator = qf * tf * (K + 1);
         double denominator = tf + K * (1 - b + b * docLength / avgDocLength);
         double log = Math.log((docCount + 1) / df);

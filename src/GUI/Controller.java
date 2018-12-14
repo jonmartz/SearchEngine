@@ -125,6 +125,7 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         statsVisible(false);
+        querySelectChoiceBox.setVisible(false);
 
         // dictionary table
         termColumn.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("term"));
@@ -202,7 +203,7 @@ public class Controller implements Initializable {
 
             BufferedReader reader = new BufferedReader(new FileReader(new File(path + "\\documents")));
             String line = reader.readLine();
-            double documentCount = Double.parseDouble(line.split(",")[0]); // todo: get doc avg length
+            double documentCount = Double.parseDouble(line.split(",")[0]);
             reader.close();
 
             dictionary = new ConcurrentHashMap<>();
@@ -494,10 +495,24 @@ public class Controller implements Initializable {
 
 
     /**
-     * Save the query results in the desired folder. The file's name will be "QueryResults.txt"
+     * Save the query results in the desired folder. The file's name will be "results.txt"
      */
-    public void saveResults() {
-        //todo: implement
+    public void saveResults() throws IOException {
+        String path = getDirectoryPath("Select folder to save results in") + "\\results.txt";
+
+        // In case index already exists
+        if (Files.exists(Paths.get(path))) {
+            String text = "\"results.txt\" already exists in folder. Do you want to rewrite it?";
+            if (getResultFromWarning(text) == ButtonType.NO) return;
+        }
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path, false)));
+        for (Query query : queries) {
+            for (Map.Entry<String, Double> doc : query.result) {
+                String[] line = {query.num, "0", doc.getKey(), "0", "0.0", "a"};
+                out.write(String.join(" ", line) + "\n");
+            }
+            out.close();
+        }
     }
 
     /**
@@ -507,14 +522,16 @@ public class Controller implements Initializable {
     public void RUN() {
         try {
             Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities());
+            queries = new ArrayList<>();
 
             // if the query entering method is by entering it in the text field (single query)
             if (queryTextCheckBox.isSelected()) {
                 querySelectChoiceBox.setVisible(false);
-                queries = null;
                 query = new Query();
+                query.num = "000";
                 query.title = queryTextField.getText();
                 query.result = searcher.getResult(query, useStemming.isSelected());
+                queries.add(query);
                 displayQueryResult();
             }
 
@@ -539,7 +556,6 @@ public class Controller implements Initializable {
      * Parse the queries file and get the list of queries and add them to query list, and also get results
      */
     private void addQueries() throws IOException {
-        queries = new ArrayList<>();
         ArrayList<String> queryStrings = ReadFile.readQueriesFile(queriesFilePath);
         for (String queryString : queryStrings) {
             Query query = new Query();

@@ -218,8 +218,8 @@
                     <center>
                         <TableView fx:id="entitiesTable" prefHeight="184.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                             <columns>
-                                <TableColumn fx:id="entitiesRankCol" prefWidth="39.0" text="Rank" />
-                                <TableColumn fx:id="entitiesEntityCol" prefWidth="156.0" text="Entity" />
+                                <TableColumn fx:id="entitiesRankCol" prefWidth="52.0" text="Rank" />
+                                <TableColumn fx:id="entitiesEntityCol" prefWidth="144.0" text="Entity" />
                             </columns>
                         </TableView>
                     </center>
@@ -268,7 +268,7 @@
                                     </font>
                                 </Text>
                                 <Text fill="#646464" strokeType="OUTSIDE" strokeWidth="0.0" text="Query Results:" />
-                        <ComboBox fx:id="querySelectChoiceBox" onAction="#querySelected" prefHeight="25.0" prefWidth="169.0" promptText="Select query" visible="false" GridPane.columnIndex="1">
+                        <ComboBox fx:id="querySelectChoiceBox" onAction="#querySelected" prefHeight="25.0" prefWidth="169.0" promptText="Select query" style="-fx-background-color: #41be69;" GridPane.columnIndex="1">
                            <GridPane.margin>
                               <Insets bottom="5.0" />
                            </GridPane.margin>
@@ -282,9 +282,9 @@
                     <center>
                         <TableView fx:id="queryResultsTable" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                             <columns>
-                                <TableColumn fx:id="queryResultsRankCol" prefWidth="39.0" text="Rank" />
-                                <TableColumn fx:id="queryResultsDocCol" prefWidth="128.0" text="Document" />
-                                <TableColumn fx:id="buttonColumn" prefWidth="88.0" text="Entities" />
+                                <TableColumn fx:id="queryResultsRankCol" prefWidth="52.0" text="Rank" />
+                                <TableColumn fx:id="queryResultsDocCol" prefWidth="137.0" text="Document" />
+                                <TableColumn fx:id="buttonColumn" prefWidth="66.0" text="Entities" />
                             </columns>
                         </TableView>
                     </center>
