@@ -20,25 +20,48 @@ public class Ranker {
      * @param avgDocLength from doc index
      * @return list of documents sorted by rank
      */
-    public PriorityQueue<Map.Entry<String, Double>> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
-                                                            HashMap<String, String[]> documents,
-                                                            int K, double b, int docCount, int avgDocLength) {
+    public SortedSet<Map.Entry<String, Double>> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
+                                                                   HashMap<String, String[]> documents,
+                                                                   int K, double b, int docCount, int avgDocLength) {
 
         HashMap<String, Double> documentsMap = new HashMap<>();
-
-        /*
-        todo: for Adiel! Instructions:
-        for posting in postings:
-            save term data (df, qf, positionsInQuery) which is posting[0]
-            for doc in posting (which is every posting[i>0])
-                documentsMap[doc] += value from BM25 formula
-        return rankedDocuments
-        */
-
+        for (ArrayList<String[]> posting : postings) {
+            String[] termData = posting.get(0);
+            for (int i = 1; i < posting.size(); i++) {
+                String[] doc = posting.get(i);
+                String docID = doc[0];
+                if (!documentsMap.containsKey(docID)) documentsMap.put(docID, 0.0);
+                int tf = Integer.parseInt(doc[2]);
+                int docLength = Integer.parseInt(documents.get(docID)[0]);
+                int qf = Integer.parseInt(termData[2]);
+                int df = Integer.parseInt(termData[1]);
+                double value = BM25(tf, docCount, docLength, avgDocLength, qf, df, K, b);
+                documentsMap.replace(docID, documentsMap.get(docID) + value);
+            }
+        }
         // sort docs by rank
-        PriorityQueue<Map.Entry<String, Double>> rankedDocuments = new PriorityQueue<>(new RankComparator());
+        SortedSet<Map.Entry<String, Double>> rankedDocuments = new TreeSet<>(new RankComparator());
         rankedDocuments.addAll(documentsMap.entrySet());
         return rankedDocuments;
+    }
+
+    /**
+     * Calculate the BM25 for the given term from the query and document
+     * @param tf            term frequency in doc
+     * @param docCount      number of docs in corpus
+     * @param docLength     length of doc
+     * @param avgDocLength  average doc length
+     * @param qf            term frequency in query
+     * @param df            term document frequency
+     * @param K             give the upper bound
+     * @param b             normalizer
+     * @return              BM25 calculation
+     */
+    double BM25(double tf, double docCount, double docLength, double avgDocLength, double qf, double df, double K, double b) {
+        double numerator = qf * tf * (K + 1);
+        double denominator = tf + K * (1 - b + b * docLength / avgDocLength);
+        double log = Math.log((docCount + 1) / df);
+        return numerator * log / denominator;
     }
 
     /**

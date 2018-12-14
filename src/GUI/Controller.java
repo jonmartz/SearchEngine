@@ -1,6 +1,8 @@
 package GUI;
 
 import Indexing.Indexer;
+import Indexing.ReadFile;
+import Models.Query;
 import Retrieval.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +16,10 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.util.Callback;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 import java.io.*;
 import java.net.URL;
@@ -74,6 +80,7 @@ public class Controller implements Initializable {
     public TableColumn queryResultsRankCol;
     public TableColumn queryResultsDocCol;
     public TableColumn buttonColumn;
+    public ComboBox querySelectChoiceBox;
 
     /**
      * indexPath of the corpus directory
@@ -102,7 +109,15 @@ public class Controller implements Initializable {
     /**
      * indexPath of the queries file
      */
-    private String queriesFilePath;
+    private String queriesFilePath = "";
+    /**
+     * Query for which the results are being displayed
+     */
+    private Query query;
+    /**
+     * List of queries from file
+     */
+    private ArrayList<Query> queries;
 
     /**
      * Initializes the controller.
@@ -110,9 +125,17 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         statsVisible(false);
+
+        // dictionary table
         termColumn.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("term"));
         dfColumn.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("df"));
         cfColumn.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("cf"));
+
+        // query results table
+        queryResultsDocCol.setCellValueFactory(new PropertyValueFactory<ResultEntry, String>("docID"));
+        queryResultsRankCol.setCellValueFactory(new PropertyValueFactory<ResultEntry, String>("rank"));
+        buttonColumn.setCellValueFactory(new PropertyValueFactory<>("null")); // just for setting up buttons
+        buttonColumn.setCellFactory(getButtonCallback());
     }
 
     /**
@@ -306,6 +329,7 @@ public class Controller implements Initializable {
      * @param text of comment
      */
     private void showComment(Text comments, String color, String text) {
+        if (color.equals("RED")) text = "ERROR: " + text;
         comments.setFill(Paint.valueOf(color));
         comments.setText(text);
         comments.setVisible(true);
@@ -330,6 +354,27 @@ public class Controller implements Initializable {
 
         // queries
         queryPane.setVisible(visibility);
+    }
+
+    /**
+     * Is called when the user types into the query text field
+     */
+    public void queryTyped() {
+        if (queryTextField.getText().isEmpty()) RUNButton.setDisable(true);
+        else RUNButton.setDisable(false);
+    }
+
+    /**
+     * Called when a query is selected from the drop down menu
+     */
+    public void querySelected() {
+        String queryNum = querySelectChoiceBox.getValue().toString();
+        for (Query query : queries) {
+            if (query.num.equals(queryNum)) {
+                this.query = query;
+                displayQueryResult();
+            }
+        }
     }
 
     /**
@@ -461,22 +506,64 @@ public class Controller implements Initializable {
      */
     public void RUN() {
         try {
-            PriorityQueue<Map.Entry<String, Double>> rankedDocuments = null;
             Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities());
 
             // if the query entering method is by entering it in the text field (single query)
             if (queryTextCheckBox.isSelected()) {
-                String query = queryTextField.getText();
-                rankedDocuments = searcher.getRankedDocuments(query, useStemming.isSelected());
+                querySelectChoiceBox.setVisible(false);
+                queries = null;
+                query = new Query();
+                query.title = queryTextField.getText();
+                query.result = searcher.getResult(query, useStemming.isSelected());
+                displayQueryResult();
             }
 
             //  if the query entering method is by selecting a query file (multiple queries)
             else {
-                // todo: ask what the heck they expect to happen here
+                addQueries();
+                for (Query query : queries)
+                    query.result = searcher.getResult(query, useStemming.isSelected());
+                setQueriesChoiceBox();
+                querySelectChoiceBox.setVisible(true);
             }
-        }catch (IOException e) {
-            showComment(commentsBox,"RED", e.getMessage());
+
+            saveResultsButton.setDisable(false);
+
+        }catch (Exception e) {
+            showComment(commentsQueryBox,"RED", e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    /**
+     * Parse the queries file and get the list of queries and add them to query list, and also get results
+     */
+    private void addQueries() throws IOException {
+        queries = new ArrayList<>();
+        ArrayList<String> queryStrings = ReadFile.readQueriesFile(queriesFilePath);
+        for (String queryString : queryStrings) {
+            Query query = new Query();
+            Document queryStructure = Jsoup.parse(queryString, "", Parser.xmlParser());
+            query.num = queryStructure.select("num").text().split(" ")[1];
+            query.title = queryStructure.select("title").text();
+            query.desc = queryStructure.select("desc").text();
+            query.narr = queryStructure.select("narr").text();
+            queries.add(query);
+        }
+    }
+
+    /**
+     * Display the query results for the current query in the query results table
+     */
+    private void displayQueryResult() {
+        ObservableList<ResultEntry> items = FXCollections.observableArrayList();
+        int rank = 1;
+        for (Map.Entry<String, Double> rankedDocument : query.result){
+            String docID = rankedDocument.getKey();
+            items.add(new ResultEntry(docID, String.valueOf(rank++)));
+        }
+        queryResultsTable.setItems(items);
+        queryResultsTable.getSortOrder().add(queryResultsRankCol);
     }
 
     /**
@@ -491,6 +578,9 @@ public class Controller implements Initializable {
             queryFileButton.setDisable(true);
 
             queryFileCheckBox.fire();
+
+            if (queryTextField.getText().isEmpty()) RUNButton.setDisable(true);
+            else RUNButton.setDisable(false);
         }
     }
 
@@ -506,6 +596,9 @@ public class Controller implements Initializable {
             queryFileButton.setDisable(false);
 
             queryTextCheckBox.fire();
+
+            if (queriesFilePath.isEmpty()) RUNButton.setDisable(true);
+            else RUNButton.setDisable(false);
         }
     }
 
@@ -533,6 +626,15 @@ public class Controller implements Initializable {
     }
 
     /**
+     * Add all queries to the select query box
+     */
+    private void setQueriesChoiceBox() {
+        querySelectChoiceBox.getItems().clear();
+        ObservableList items = querySelectChoiceBox.getItems();
+        for (Query query : queries) items.add(query.num);
+    }
+
+    /**
      * Get a list of all the cities selected in the cities menu
      * @return list of selected cities
      */
@@ -545,5 +647,81 @@ public class Controller implements Initializable {
         return selectedCities;
     }
 
-    // todo: add ranked docs class
+    /**
+     * Function used to set the button column correctly (taken from stackoverflow)
+     * @return Callback
+     */
+    private Callback<TableColumn<ResultEntry, String>, TableCell<ResultEntry, String>> getButtonCallback() {
+
+        return new Callback<TableColumn<ResultEntry, String>, TableCell<ResultEntry, String>>() {
+            @Override
+            public TableCell call(final TableColumn<ResultEntry, String> param) {
+                final TableCell<ResultEntry, String> cell = new TableCell<ResultEntry, String>() {
+
+                    final Button button = new Button("show");
+
+                    @Override
+                    public void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                            setText(null);
+                        } else {
+                            button.setOnAction(event -> {
+                                ResultEntry resultEntry = getTableView().getItems().get(getIndex());
+                                showEntities(resultEntry.docID);
+                            });
+                            setGraphic(button);
+                            setText(null);
+                        }
+                    }
+                };
+                return cell;
+            }
+        };
+    }
+
+    /**
+     * Display the dominant entities of doc in the entities table
+     * @param docID of doc
+     */
+    private void showEntities(String docID) {
+        // todo: implement
+    }
+
+    /**
+     * Class for displaying the query results in the table
+     */
+    public class ResultEntry {
+
+        // data holders
+        private final String docID;
+        private final int rank;
+
+        /**
+         * Constructor
+         * @param docID of result
+         * @param rank  of result
+         */
+        public ResultEntry(String docID, String rank) {
+            this.docID = docID;
+            this.rank = Integer.parseInt(rank);
+        }
+
+        /**
+         * getter
+         * @return value
+         */
+        public String getDocID() {
+            return docID;
+        }
+
+        /**
+         * getter
+         * @return value
+         */
+        public int getRank() {
+            return rank;
+        }
+    }
 }

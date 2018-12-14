@@ -11,6 +11,7 @@ public class Main extends Application {
     1) stop words are now saved in index
     2) added getParsedSentence to indexer AND parser
     3) added document average calculation in writeDocs function
+    4) added costume tag to ReadFile
     */
 
     @Override

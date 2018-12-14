@@ -408,7 +408,7 @@ public class Indexer {
 
                 try {
                 // each docString is a string containing everything from <DOC> to </DOC>
-                docStrings = ReadFile.read(filePath);
+                docStrings = ReadFile.read(filePath, "DOC");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

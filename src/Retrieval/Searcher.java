@@ -1,6 +1,7 @@
 package Retrieval;
 
 import Indexing.Indexer;
+import Models.Query;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -12,6 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Searcher {
 
+    /**
+     * true if some cities were selected to filter the documents with
+     */
+    private final boolean useFilter;
     /**
      * Dictionary of terms in index
      */
@@ -35,7 +40,19 @@ public class Searcher {
     /**
      * list of documents filtered by selected cities
      */
-    private HashSet<String> selectedDocuments;
+    private HashMap<String, String[]> selectedDocuments;
+    /**
+     * stop words set
+     */
+    private HashSet<String> stopWords;
+    /**
+     * number of docs in corpus
+     */
+    private int docCount;
+    /**
+     * average doc length in corpus
+     */
+    private int averageDocLength;
 
     /**
      * Constructor
@@ -48,19 +65,23 @@ public class Searcher {
         this.dictionary = dictionary;
         this.indexPath = indexPath;
         this.selectedCities = selectedCities;
+        this.useFilter = !selectedCities.isEmpty();
         this.indexer = new Indexer(indexPath);
         this.ranker = new Ranker();
         this.selectedDocuments = getSelectedDocuments();
+        this.stopWords = getStopWords();
     }
 
     /**
-     * Get the list of selected documents filetered by selected cities
-     * @return set of document IDs
+     * Get the list of selected documents with their data from index, filtered by selected cities
+     * @return map of documents with data from index, in the from:
+     *         docID -> docLength, 
      */
-    private HashSet<String> getSelectedDocuments() throws IOException {
-        HashSet<String> selectedDocuments = new HashSet<>();
-        for (String city : selectedCities){
+    private HashMap<String, String[]> getSelectedDocuments() throws IOException {
+        HashMap<String, String[]> selectedDocuments = new HashMap<>();
 
+        // Get all documents that contain a city from the selected cities
+        for (String city : selectedCities){
             // Get the city postings
             long[] data = new long[3];
             city = getTermDataAndFixTermCase(city, data);
@@ -68,9 +89,28 @@ public class Searcher {
             ArrayList<String[]> cityPostings = new ArrayList<>();
             searchAndAddTermPostings(city, pointer, cityPostings, false);
 
-            // add cities to selected cities
-            for (String[] cityPosting : cityPostings) selectedDocuments.add(cityPosting[0]);
+            // get all filtered documents, still without their data.
+            for (String[] cityPosting : cityPostings) selectedDocuments.put(cityPosting[0], null);
         }
+
+        // Get the document data from document index
+        String inputPath = indexPath + "\\documents";
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(inputPath), StandardCharsets.UTF_8));
+        String line = reader.readLine();
+        String[] stats = line.split(",");
+        docCount = Integer.parseInt(stats[0]);
+        averageDocLength = Integer.parseInt(stats[1]);
+        // read index
+        while ((line = reader.readLine()) != null) {
+            String[] strings = line.split("\\|");
+            String docID = strings[0];
+            // the filtering part:
+            if (useFilter && !selectedDocuments.containsKey(docID)) continue;
+            String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7]};
+            selectedDocuments.put(docID,docData);
+        }
+        reader.close();
         return selectedDocuments;
     }
 
@@ -81,11 +121,10 @@ public class Searcher {
      * @param useStemming true to use stemming
      * @return list of relevant documents
      */
-    public PriorityQueue<Map.Entry<String, Double>> getRankedDocuments(String query, boolean useStemming) throws IOException {
+    public SortedSet<Map.Entry<String, Double>> getResult(Query query, boolean useStemming) throws IOException {
 
         // get terms from query
-        HashSet<String> stopWords = getStopWords();
-        LinkedList<String> parsedSentence = indexer.getParsedSentence(query, stopWords, useStemming);
+        LinkedList<String> parsedSentence = indexer.getParsedSentence(query.title, stopWords, useStemming);
         HashMap<String, ArrayList<Integer>> terms = new HashMap<>();
         int position = 0;
         for (String term : parsedSentence){ // add positions
@@ -101,35 +140,7 @@ public class Searcher {
             addPostings(termEntry, postings);
         }
 
-        // get document data
-        int[] docStats = new int[2]; // doc count (M in BM25) and average doc length (avdl)
-        HashMap<String, String[]> documents = new HashMap<>();
-        getDocumentData(documents, docStats);
-
-        return ranker.getRankedDocuments(postings, documents, 1, 0.75, docStats[0], docStats[1]);
-    }
-
-    /**
-     * Put all the documents from document index with their data in list, and save general doc stats
-     * Each document entry will be: docName -> docLength, maxTf, city, language, date
-     * @param documents list to add documents to
-     * @param documentStats [0] = document count, [1] = average document length
-     */
-    private void getDocumentData(HashMap<String,String[]> documents, int[] documentStats) throws IOException {
-        String inputPath = indexPath + "\\documents";
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(inputPath), StandardCharsets.UTF_8));
-        String line = reader.readLine();
-        String[] stats = line.split(",");
-        documentStats[0] = Integer.parseInt(stats[0]); // doc count
-        documentStats[1] = Integer.parseInt(stats[1]); // avg doc length
-        while ((line = reader.readLine()) != null) {
-            String[] strings = line.split("\\|");
-            String documentName = strings[0];
-            String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7]};
-            documents.put(documentName,docData);
-        }
-        reader.close();
+        return ranker.getRankedDocuments(postings, selectedDocuments, 1, 0.75, docCount, averageDocLength);
     }
 
     /**
@@ -173,8 +184,8 @@ public class Searcher {
      * @param termPostings list to add the postings to
      * @param filterByCities true to not add the docs that are not in the set of selected docs
      */
-    private void searchAndAddTermPostings(String term, long pointer,ArrayList<String[]> termPostings
-            , boolean filterByCities) throws IOException {
+    private void searchAndAddTermPostings(String term, long pointer,ArrayList<String[]> termPostings,
+                                          boolean filterByCities) throws IOException {
 
         RandomAccessFile reader = new RandomAccessFile(indexPath + "\\postings\\" + term.charAt(0), "rw");
         reader.seek(pointer);
@@ -186,7 +197,7 @@ public class Searcher {
             String docID = strings[0];
 
             // Add, if not filtering OR (filtering AND document is in the selected set)
-            if (filterByCities && !selectedDocuments.contains(docID)) continue;
+            if (filterByCities && !selectedDocuments.containsKey(docID)) continue;
             String[] posting = {docID, strings[1], strings[2], strings[3]};
             termPostings.add(posting);
         }
@@ -195,16 +206,21 @@ public class Searcher {
     /**
      * Get the term data from dictionary, and fix the term to upper / lower case if necessary
      * @param term to get data of
-     * @param termData from dictionary
+     * @param termDataPointer term data to modify
      * @return fixed term
      */
-    private String getTermDataAndFixTermCase(String term, long[] termData) {
-        dictionary.get(term);
+    private String getTermDataAndFixTermCase(String term, long[] termDataPointer) {
+        long[] termData = dictionary.get(term);
         if (termData == null) { // then term appears in lower case in dictionary
             term = term.toLowerCase();
-            dictionary.get(term);
+            termData = dictionary.get(term);
         }
-        if (termData == null) term = null; // term is not in dictionary!
+        if (termData == null) return null; // term is not in dictionary! todo: add case in parent
+        else {
+            termDataPointer[0] = termData[0];
+            termDataPointer[1] = termData[1];
+            termDataPointer[2] = termData[2];
+        }
         return term;
     }
 
