@@ -7,11 +7,13 @@ import Retrieval.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
@@ -59,6 +61,7 @@ public class Controller implements Initializable {
     public Button loadDictionaryButton;
     public Button corpusPathButton;
     public Button indexPathButton;
+    public GridPane indexStatsPane;
 
     // queries part
     @FXML
@@ -82,6 +85,10 @@ public class Controller implements Initializable {
     public TableColumn buttonColumn;
     public ComboBox querySelectChoiceBox;
 
+    /**
+     * indicate whether the loaded dictionary is from an index that was built using stemming or not
+     */
+    private boolean usedStemming = false;
     /**
      * indexPath of the corpus directory
      */
@@ -241,8 +248,14 @@ public class Controller implements Initializable {
      * @return full path
      */
     private String getIndexFullPath() {
-        if (useStemming.isSelected()) return indexPath + "\\WithStemming";
-        else return indexPath + "\\WithoutStemming";
+        if (useStemming.isSelected()) {
+            usedStemming = true;
+            return indexPath + "\\WithStemming";
+        }
+        else{
+            usedStemming = false;
+            return indexPath + "\\WithoutStemming";
+        }
     }
 
     /**
@@ -375,6 +388,21 @@ public class Controller implements Initializable {
                 this.query = query;
                 displayQueryResult();
             }
+        }
+    }
+
+    /**
+     * Called when the user presses the stemming button
+     */
+    public void pressedStemming() {
+        if ((usedStemming && !useStemming.isSelected()) || (!usedStemming && useStemming.isSelected())) {
+            indexStatsPane.setVisible(false);
+            dictionaryView.setVisible(false);
+            queryPane.setVisible(false);
+        } else if (dictionary != null){
+            indexStatsPane.setVisible(true);
+            if (dictionaryView.getItems() != null) dictionaryView.setVisible(true);
+            queryPane.setVisible(true);
         }
     }
 
