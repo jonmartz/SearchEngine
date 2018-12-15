@@ -87,12 +87,12 @@
                            <items>
                               <MenuItem mnemonicParsing="false" text="= K ">
                                  <graphic>
-                                    <TextField fx:id="KTextField" alignment="CENTER_RIGHT" onKeyReleased="#setKforBM25" prefWidth="50.0" promptText="integer" text="1" />
+                                    <TextField fx:id="KTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setKforBM25" prefWidth="50.0" promptText="integer" text="1.2" />
                                  </graphic>
                               </MenuItem>
                               <MenuItem mnemonicParsing="false" text="= b">
                                  <graphic>
-                                    <TextField fx:id="bTextField" alignment="CENTER_RIGHT" onKeyReleased="#setBforBM25" prefWidth="50.0" promptText="double [0,1]" text="0.5" />
+                                    <TextField fx:id="bTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setBforBM25" prefWidth="50.0" promptText="double [0,1]" text="0.75" />
                                  </graphic>
                               </MenuItem>
                            </items>

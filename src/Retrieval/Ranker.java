@@ -22,7 +22,7 @@ public class Ranker {
      */
     public SortedSet<Map.Entry<String, Double>> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
                                                                    HashMap<String, String[]> documents,
-                                                                   int K, double b, int docCount, double avgDocLength) {
+                                                                   double K, double b, int docCount, double avgDocLength) {
         HashMap<String, Double> documentsMap = new HashMap<>();
         for (ArrayList<String[]> posting : postings) {
             String[] termData = posting.get(0);

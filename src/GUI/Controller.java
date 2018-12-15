@@ -130,7 +130,7 @@ public class Controller implements Initializable {
     private ArrayList<Query> queries;
 
     // parameters for BM25:
-    private int K;
+    private double K;
     private double b;
 
     /**
@@ -433,9 +433,9 @@ public class Controller implements Initializable {
      */
     public void setKforBM25() {
         try{
-            K = Integer.parseInt(KTextField.getText());
+            K = Double.parseDouble(KTextField.getText());
         } catch (NumberFormatException e) {
-            showComment(commentsBox, "RED", "K must be an integer");
+            showComment(commentsBox, "RED", "K must be a double");
         }
     }
 
@@ -594,7 +594,7 @@ public class Controller implements Initializable {
      */
     public void RUN() {
         try {
-            Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities());
+            Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b);
             queries = new ArrayList<>();
 
             // if the query entering method is by entering it in the text field (single query)

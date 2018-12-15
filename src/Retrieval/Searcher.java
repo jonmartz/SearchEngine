@@ -17,6 +17,7 @@ public class Searcher {
      * true if some cities were selected to filter the documents with
      */
     private final boolean useFilter;
+
     /**
      * Dictionary of terms in index
      */
@@ -53,15 +54,20 @@ public class Searcher {
      * average doc length in corpus
      */
     private double averageDocLength;
+    // for BM25
+    private double k;
+    private double b;
 
     /**
      * Constructor
      * @param dictionary of terms
      * @param indexPath path of index folder
      * @param selectedCities to filer documents with
+     * @param k for BM25
+     * @param b for BM25
      */
     public Searcher(ConcurrentHashMap<String, long[]> dictionary,
-                    String indexPath, HashSet<String> selectedCities) throws IOException {
+                    String indexPath, HashSet<String> selectedCities, double k, double b) throws IOException {
         this.dictionary = dictionary;
         this.indexPath = indexPath;
         this.selectedCities = selectedCities;
@@ -70,6 +76,8 @@ public class Searcher {
         this.ranker = new Ranker();
         this.selectedDocuments = getSelectedDocuments();
         this.stopWords = getStopWords();
+        this.k = k;
+        this.b = b;
     }
 
     /**
@@ -144,7 +152,7 @@ public class Searcher {
             addPostings(termEntry, postings);
         }
 
-        return ranker.getRankedDocuments(postings, selectedDocuments, 1, 0.75, docCount, averageDocLength);
+        return ranker.getRankedDocuments(postings, selectedDocuments, k, b, docCount, averageDocLength);
     }
 
     /**
