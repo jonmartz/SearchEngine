@@ -52,7 +52,7 @@ public class Searcher {
     /**
      * average doc length in corpus
      */
-    private int averageDocLength;
+    private double averageDocLength;
 
     /**
      * Constructor
@@ -100,13 +100,17 @@ public class Searcher {
         String line = reader.readLine();
         String[] stats = line.split(",");
         docCount = Integer.parseInt(stats[0]);
-        averageDocLength = Integer.parseInt(stats[1]);
+        averageDocLength = Double.parseDouble(stats[1]);
         // read index
         while ((line = reader.readLine()) != null) {
-            String[] strings = line.split("\\|");
+            String[] strings = (line + "\\|").split("\\|");
             String docID = strings[0];
             // the filtering part:
+            if (strings.length < 8){
+                int x = 1;
+            }
             if (useFilter && !selectedDocuments.containsKey(docID)) continue;
+            //                  docLength   maxTf       city        language    date
             String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7]};
             selectedDocuments.put(docID,docData);
         }
@@ -190,7 +194,7 @@ public class Searcher {
 
         RandomAccessFile reader = new RandomAccessFile(indexPath + "\\postings\\" + term.charAt(0), "rw");
         reader.seek(pointer);
-        String line = reader.readLine(); // skip the first line cause it's the term's name
+        String line;
         while ((line = reader.readLine()) != null && line.length() > 1) {
             String[] strings = line.split("\\|");
 

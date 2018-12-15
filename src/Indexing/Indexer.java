@@ -204,23 +204,24 @@ public class Indexer {
 
         long start = System.currentTimeMillis();
 
-        this.filesPerPosting = filesPerPosting;
-        this.useStemming = useStemming;
-
-        String stopWordsName = "stop_words.txt";
-        stopWords = getStopWords(corpusPath, stopWordsName, index_path);
-        documentIndex = new LinkedBlockingDeque<>();
-        dictionary = new ConcurrentHashMap<>();
-        cityIndex = new ConcurrentHashMap<>();
-        stemCollection = new ConcurrentHashMap<>();
-        languages = new TreeSet<>();
-
         // Create postings dir
         Path directory = Paths.get(index_path);
         if (Files.exists(directory)) {
             removeDir(directory);
         }
         new File(index_path + "\\postings\\temp").mkdirs();
+
+        this.filesPerPosting = filesPerPosting;
+        this.useStemming = useStemming;
+
+        String stopWordsName = "stop_words.txt";
+        documentIndex = new LinkedBlockingDeque<>();
+        dictionary = new ConcurrentHashMap<>();
+        cityIndex = new ConcurrentHashMap<>();
+        stemCollection = new ConcurrentHashMap<>();
+        languages = new TreeSet<>();
+
+        stopWords = getStopWords(corpusPath, stopWordsName, index_path);
 
         this.taskCount = Runtime.getRuntime().availableProcessors();
         Task[] tasks = new Task[taskCount];

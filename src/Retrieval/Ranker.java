@@ -22,7 +22,7 @@ public class Ranker {
      */
     public SortedSet<Map.Entry<String, Double>> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
                                                                    HashMap<String, String[]> documents,
-                                                                   int K, double b, int docCount, int avgDocLength) {
+                                                                   int K, double b, int docCount, double avgDocLength) {
         HashMap<String, Double> documentsMap = new HashMap<>();
         for (ArrayList<String[]> posting : postings) {
             String[] termData = posting.get(0);
@@ -41,7 +41,16 @@ public class Ranker {
         // sort docs by rank
         SortedSet<Map.Entry<String, Double>> rankedDocuments = new TreeSet<>(new RankComparator());
         rankedDocuments.addAll(documentsMap.entrySet());
-        return rankedDocuments;
+
+        // get top 50 or less
+        SortedSet<Map.Entry<String, Double>> topDocuments = new TreeSet<>(new RankComparator());
+        int count = 0;
+        for (Map.Entry<String, Double> document : rankedDocuments){
+            topDocuments.add(document);
+            count++;
+            if (count == 50) break;
+        }
+        return topDocuments;
     }
 
     /**

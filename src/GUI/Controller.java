@@ -12,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
@@ -84,6 +85,8 @@ public class Controller implements Initializable {
     public TableColumn queryResultsDocCol;
     public TableColumn buttonColumn;
     public ComboBox querySelectChoiceBox;
+    public TextField KTextField;
+    public TextField bTextField;
 
     /**
      * indicate whether the loaded dictionary is from an index that was built using stemming or not
@@ -126,6 +129,10 @@ public class Controller implements Initializable {
      */
     private ArrayList<Query> queries;
 
+    // parameters for BM25:
+    private int K;
+    private double b;
+
     /**
      * Initializes the controller.
      */
@@ -144,6 +151,9 @@ public class Controller implements Initializable {
         queryResultsRankCol.setCellValueFactory(new PropertyValueFactory<ResultEntry, String>("rank"));
         buttonColumn.setCellValueFactory(new PropertyValueFactory<>("null")); // just for setting up buttons
         buttonColumn.setCellFactory(getButtonCallback());
+
+        setKforBM25();
+        setBforBM25();
     }
 
     /**
@@ -289,16 +299,25 @@ public class Controller implements Initializable {
             dictionary = null;
 
             // Modify GUI
-            showComment(commentsBox,"GREEN", "Creating index...");
             statsVisible(false);
+            showComment(commentsBox,"GREEN", "Creating index...");
+            createIndexButton.setDisable(true);
+            loadDictionaryButton.setDisable(true);
             dictionaryView.setItems(null);
 
             // Run indexer on thread so gui can work
             Thread thread = new Thread(new Task<Void>() {
                 @Override
-                protected Void call() throws Exception {
-                    indexer.createInvertedIndex(corpusPath, useStemming.isSelected(), filesPerPosting);
-                    indexingFinished();
+                protected Void call() {
+                    try {
+                        indexer.createInvertedIndex(corpusPath, useStemming.isSelected(), filesPerPosting);
+                        indexingFinished();
+                    }
+                    catch (Exception e) {
+                        indexer = null;
+                        showComment(commentsBox,"RED", e.getMessage());
+                        e.printStackTrace();
+                    }
                     return null;
                 }
             });
@@ -315,6 +334,8 @@ public class Controller implements Initializable {
      */
     private void indexingFinished() {
         double totalTime = (System.currentTimeMillis() - startingTime)/1000;
+        createIndexButton.setDisable(false);
+        loadDictionaryButton.setDisable(false);
         dictionary = indexer.getDictionary();
         languageChoicebox.setItems(FXCollections.observableArrayList(indexer.getLanguages()));
         setCities(indexer.getCities());
@@ -382,7 +403,7 @@ public class Controller implements Initializable {
      * Called when a query is selected from the drop down menu
      */
     public void querySelected() {
-        String queryNum = querySelectChoiceBox.getValue().toString();
+        String queryNum = querySelectChoiceBox.getValue().toString().split(":")[0];
         for (Query query : queries) {
             if (query.num.equals(queryNum)) {
                 this.query = query;
@@ -392,17 +413,40 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Called when the user presses the stemming button
+     * Called when the user presses the stemming button. If the loaded dictionary is not from
+     * an index built with/without stemming, makes part of the GUI invisible.
      */
     public void pressedStemming() {
         if ((usedStemming && !useStemming.isSelected()) || (!usedStemming && useStemming.isSelected())) {
-            indexStatsPane.setVisible(false);
+            statsVisible(false);
             dictionaryView.setVisible(false);
             queryPane.setVisible(false);
         } else if (dictionary != null){
-            indexStatsPane.setVisible(true);
+            statsVisible(true);
             if (dictionaryView.getItems() != null) dictionaryView.setVisible(true);
             queryPane.setVisible(true);
+        }
+    }
+
+    /**
+     * Set the K parameter for the BM25 formula. is called after something is inserted in textbox
+     */
+    public void setKforBM25() {
+        try{
+            K = Integer.parseInt(KTextField.getText());
+        } catch (NumberFormatException e) {
+            showComment(commentsBox, "RED", "K must be an integer");
+        }
+    }
+
+    /**
+     * Set the b parameter for the BM25 formula. is called after something is inserted in textbox
+     */
+    public void setBforBM25() {
+        try{
+            b = Double.parseDouble(bTextField.getText());
+        } catch (NumberFormatException e) {
+            showComment(commentsBox, "RED", "b must be a double");
         }
     }
 
@@ -534,13 +578,14 @@ public class Controller implements Initializable {
             if (getResultFromWarning(text) == ButtonType.NO) return;
         }
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path, false)));
+        String newLine = System.getProperty("line.separator");
         for (Query query : queries) {
             for (Map.Entry<String, Double> doc : query.result) {
                 String[] line = {query.num, "0", doc.getKey(), "0", "0.0", "a"};
-                out.write(String.join(" ", line) + "\n");
+                out.write(String.join(" ", line) + newLine);
             }
-            out.close();
         }
+        out.close();
     }
 
     /**
@@ -675,7 +720,7 @@ public class Controller implements Initializable {
     private void setQueriesChoiceBox() {
         querySelectChoiceBox.getItems().clear();
         ObservableList items = querySelectChoiceBox.getItems();
-        for (Query query : queries) items.add(query.num);
+        for (Query query : queries) items.add(query.num + ": " + query.title);
     }
 
     /**

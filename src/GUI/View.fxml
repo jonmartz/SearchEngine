@@ -81,6 +81,24 @@
                                 </MenuItem>
                             </items>
                         </Menu>
+                  <Menu mnemonicParsing="false" text="Parameters">
+                    <items>
+                        <Menu mnemonicParsing="false" text="BM25">
+                           <items>
+                              <MenuItem mnemonicParsing="false" text="= K ">
+                                 <graphic>
+                                    <TextField fx:id="KTextField" alignment="CENTER_RIGHT" onKeyReleased="#setKforBM25" prefWidth="50.0" promptText="integer" text="1" />
+                                 </graphic>
+                              </MenuItem>
+                              <MenuItem mnemonicParsing="false" text="= b">
+                                 <graphic>
+                                    <TextField fx:id="bTextField" alignment="CENTER_RIGHT" onKeyReleased="#setBforBM25" prefWidth="50.0" promptText="double [0,1]" text="0.5" />
+                                 </graphic>
+                              </MenuItem>
+                           </items>
+                        </Menu>
+                    </items>
+                  </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
                                 <MenuItem mnemonicParsing="false">
