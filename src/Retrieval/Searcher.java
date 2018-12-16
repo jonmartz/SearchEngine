@@ -17,7 +17,6 @@ public class Searcher {
      * true if some cities were selected to filter the documents with
      */
     private final boolean useFilter;
-
     /**
      * Dictionary of terms in index
      */
@@ -54,9 +53,15 @@ public class Searcher {
      * average doc length in corpus
      */
     private double averageDocLength;
+    /**
+     * indicates how many docs to retrieve as result for a query
+     */
+    private final int resultSize;
+
     // for BM25
     private double k;
     private double b;
+
 
     /**
      * Constructor
@@ -67,7 +72,8 @@ public class Searcher {
      * @param b for BM25
      */
     public Searcher(ConcurrentHashMap<String, long[]> dictionary,
-                    String indexPath, HashSet<String> selectedCities, double k, double b) throws IOException {
+                    String indexPath, HashSet<String> selectedCities,
+                    double k, double b, int resultSize) throws IOException {
         this.dictionary = dictionary;
         this.indexPath = indexPath;
         this.selectedCities = selectedCities;
@@ -78,6 +84,7 @@ public class Searcher {
         this.stopWords = getStopWords();
         this.k = k;
         this.b = b;
+        this.resultSize = resultSize;
     }
 
     /**
@@ -151,8 +158,7 @@ public class Searcher {
         for (Map.Entry<String, ArrayList<Integer>> termEntry : terms.entrySet()){
             addPostings(termEntry, postings);
         }
-
-        return ranker.getRankedDocuments(postings, selectedDocuments, k, b, docCount, averageDocLength);
+        return ranker.getRankedDocuments(postings, selectedDocuments, k, b, docCount, averageDocLength, resultSize);
     }
 
     /**
@@ -163,7 +169,7 @@ public class Searcher {
      * @param termEntry to add posting of
      * @param postings to add the posting to
      */
-    private void addPostings(Map.Entry<String, ArrayList<Integer>> termEntry,
+    public void addPostings(Map.Entry<String, ArrayList<Integer>> termEntry,
                              ArrayList<ArrayList<String[]>> postings) throws IOException {
 
         String term = termEntry.getKey();
@@ -241,7 +247,7 @@ public class Searcher {
      * Get stop words from index
      * @return set of stop words
      */
-    private HashSet<String> getStopWords() throws IOException {
+    public HashSet<String> getStopWords() throws IOException {
         String inputPath = indexPath + "\\stopWords";
         BufferedReader reader = new BufferedReader(new InputStreamReader(
                 new FileInputStream(inputPath), StandardCharsets.UTF_8));

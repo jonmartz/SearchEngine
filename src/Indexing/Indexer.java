@@ -202,7 +202,7 @@ public class Indexer {
      */
     public void createInvertedIndex(String corpusPath, boolean useStemming, int filesPerPosting) throws IOException {
 
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
 
         // Create postings dir
         Path directory = Paths.get(index_path);
@@ -262,7 +262,6 @@ public class Indexer {
 
         // Free up memory for merging
         documentIndex.clear();
-//        cityIndex.clear(); todo: clear
 
         long mergeStart = System.currentTimeMillis();
 
@@ -274,8 +273,8 @@ public class Indexer {
         writeDictionary();
         dictionarySize = dictionary.size();
 
-        long time = System.currentTimeMillis() - start;
-        System.out.println("total time: " + time);
+//        long time = System.currentTimeMillis() - start;
+//        System.out.println("total time: " + time);
     }
 
     /**

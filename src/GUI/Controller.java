@@ -87,6 +87,9 @@ public class Controller implements Initializable {
     public ComboBox querySelectChoiceBox;
     public TextField KTextField;
     public TextField bTextField;
+    public TextField searchTermPostingsTextField;
+    public Button searchTermPostingsButton;
+    public TextField resultSizeTextField;
 
     /**
      * indicate whether the loaded dictionary is from an index that was built using stemming or not
@@ -132,6 +135,9 @@ public class Controller implements Initializable {
     // parameters for BM25:
     private double K;
     private double b;
+
+    // for our own use
+    private String termToSearchPostings;
 
     /**
      * Initializes the controller.
@@ -375,7 +381,7 @@ public class Controller implements Initializable {
      * @param visibility true to show the elements, false to hide them
      */
     private void statsVisible(boolean visibility) {
-        commentsBox.setVisible(false);
+//        commentsBox.setVisible(false);
         docCountValue.setVisible(visibility);
         termCountValue.setVisible(visibility);
         totalTimeValue.setVisible(visibility);
@@ -447,6 +453,35 @@ public class Controller implements Initializable {
             b = Double.parseDouble(bTextField.getText());
         } catch (NumberFormatException e) {
             showComment(commentsBox, "RED", "b must be a double");
+        }
+    }
+
+    /**
+     * Print in console the postings of term to search
+     */
+    public void searchTermPostings() {
+        try {
+            String path = getIndexFullPath();
+            int resultSize = Integer.parseInt(resultSizeTextField.getText());
+            Searcher searcher = new Searcher(dictionary, path, getSelectedCities(), K, b, resultSize);
+            Indexer tempIndexer = new Indexer(path);
+            HashSet<String> stopWords = searcher.getStopWords();
+            String text = searchTermPostingsTextField.getText();
+            LinkedList<String> parsedSentence = tempIndexer.getParsedSentence(text, stopWords, useStemming.isSelected());
+            HashMap<String, ArrayList<Integer>> terms = new HashMap<>();
+            ArrayList<Integer> positions = new ArrayList<>();
+            positions.add(0);
+            for (String term : parsedSentence) terms.put(term, positions);
+            ArrayList<ArrayList<String[]>> postings = new ArrayList<>();
+            for (Map.Entry<String, ArrayList<Integer>> termEntry : terms.entrySet())
+                searcher.addPostings(termEntry, postings);
+            for (ArrayList<String[]> posting : postings){
+                for (String[] doc : posting){
+                    System.out.println(String.join(" ", doc));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -594,7 +629,8 @@ public class Controller implements Initializable {
      */
     public void RUN() {
         try {
-            Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b);
+            int resultSize = Integer.parseInt(resultSizeTextField.getText());
+            Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b, resultSize);
             queries = new ArrayList<>();
 
             // if the query entering method is by entering it in the text field (single query)

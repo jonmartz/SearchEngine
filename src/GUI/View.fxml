@@ -97,6 +97,25 @@
                               </MenuItem>
                            </items>
                         </Menu>
+                        <MenuItem mnemonicParsing="false" text="= result size">
+                           <graphic>
+                              <TextField fx:id="resultSizeTextField" nodeOrientation="LEFT_TO_RIGHT" prefWidth="50.0" promptText="integer" text="50" />
+                           </graphic>
+                        </MenuItem>
+                    </items>
+                  </Menu>
+                  <Menu mnemonicParsing="false" text="Search">
+                    <items>
+                        <MenuItem mnemonicParsing="false">
+                           <graphic>
+                              <TextField fx:id="searchTermPostingsTextField" promptText="Enter term" />
+                           </graphic>
+                        </MenuItem>
+                        <MenuItem mnemonicParsing="false">
+                           <graphic>
+                              <Button fx:id="searchTermPostingsButton" mnemonicParsing="false" onAction="#searchTermPostings" text="Get term postings" />
+                           </graphic>
+                        </MenuItem>
                     </items>
                   </Menu>
                         <Menu mnemonicParsing="false" text="Help">

@@ -369,13 +369,7 @@ public class Parse {
         boolean upper = false;
         if (Character.isUpperCase(token.charAt(0))) upper = true;
         if (use_stemming) {
-//            String stem = stem_collection.get(token.toLowerCase());
-//            if (stem == null){
-//                stem = stemmer.stem(token);
-//                stem_collection.put(token.toLowerCase(), stem);
-//            }
-//            token = stem;
-            token = stemmer.stem(token);
+            token = stemmer.stem(token.toLowerCase());
         }
         if (upper) token = token.toUpperCase();
         return token;
