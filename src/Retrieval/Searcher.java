@@ -1,6 +1,8 @@
 package Retrieval;
 
 import Indexing.Indexer;
+import Indexing.ReadFile;
+import Models.Doc;
 import Models.Query;
 
 import java.io.*;
@@ -13,10 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Searcher {
 
-    /**
-     * true if some cities were selected to filter the documents with
-     */
-    private final boolean useFilter;
     /**
      * Dictionary of terms in index
      */
@@ -40,7 +38,7 @@ public class Searcher {
     /**
      * list of documents filtered by selected cities
      */
-    private HashMap<String, String[]> selectedDocuments;
+    private HashMap<String, String[]> documents;
     /**
      * stop words set
      */
@@ -77,10 +75,9 @@ public class Searcher {
         this.dictionary = dictionary;
         this.indexPath = indexPath;
         this.selectedCities = selectedCities;
-        this.useFilter = !selectedCities.isEmpty();
         this.indexer = new Indexer(indexPath);
         this.ranker = new Ranker();
-        this.selectedDocuments = getSelectedDocuments();
+        this.documents = getDocuments(!selectedCities.isEmpty());
         this.stopWords = getStopWords();
         this.k = k;
         this.b = b;
@@ -88,25 +85,16 @@ public class Searcher {
     }
 
     /**
-     * Get the list of selected documents with their data from index, filtered by selected cities
+     * Get the list of documents with their data, doc count and average doc length from index.
+     * @param useFilter if true, get only documents that have a city from selected cities list.
+     *                  else, get all documents.
      * @return map of documents with data from index, in the from:
-     *         docID -> docLength, 
+     * docID -> docLength, maxTf, city, language, date
      */
-    private HashMap<String, String[]> getSelectedDocuments() throws IOException {
-        HashMap<String, String[]> selectedDocuments = new HashMap<>();
+    private HashMap<String, String[]> getDocuments(boolean useFilter) throws IOException {
 
-        // Get all documents that contain a city from the selected cities
-        for (String city : selectedCities){
-            // Get the city postings
-            long[] data = new long[3];
-            city = getTermDataAndFixTermCase(city, data);
-            long pointer = data[2]; // pointer to offset in postings file
-            ArrayList<String[]> cityPostings = new ArrayList<>();
-            searchAndAddTermPostings(city, pointer, cityPostings, false);
-
-            // get all filtered documents, still without their data.
-            for (String[] cityPosting : cityPostings) selectedDocuments.put(cityPosting[0], null);
-        }
+        HashMap<String, String[]> documents = new HashMap<>();
+        if (useFilter) documents = getFilteredDocuments();
 
         // Get the document data from document index
         String inputPath = indexPath + "\\documents";
@@ -116,20 +104,37 @@ public class Searcher {
         String[] stats = line.split(",");
         docCount = Integer.parseInt(stats[0]);
         averageDocLength = Double.parseDouble(stats[1]);
+
         // read index
         while ((line = reader.readLine()) != null) {
             String[] strings = (line + "\\|").split("\\|");
             String docID = strings[0];
             // the filtering part:
-            if (strings.length < 8){
-                int x = 1;
-            }
-            if (useFilter && !selectedDocuments.containsKey(docID)) continue;
+            if (useFilter && !documents.containsKey(docID)) continue;
             //                  docLength   maxTf       city        language    date
             String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7]};
-            selectedDocuments.put(docID,docData);
+            documents.put(docID,docData);
         }
         reader.close();
+        return documents;
+    }
+
+    /**
+     * Get all documents that contain a city from the selected cities
+     */
+    private HashMap<String, String[]> getFilteredDocuments() throws IOException {
+        HashMap<String, String[]> selectedDocuments = new HashMap<>();
+        for (String city : selectedCities){
+            // Get the city postings
+            long[] data = new long[3];
+            city = getTermDataAndFixTermCase(city, data);
+            long pointer = data[2]; // pointer to offset in postings file
+            ArrayList<String[]> cityPostings = new ArrayList<>();
+            searchAndAddTermPostings(city, pointer, cityPostings, false);
+
+            // get all doc names filtered by cities, still without their data.
+            for (String[] cityPosting : cityPostings) selectedDocuments.put(cityPosting[0], null);
+        }
         return selectedDocuments;
     }
 
@@ -158,7 +163,7 @@ public class Searcher {
         for (Map.Entry<String, ArrayList<Integer>> termEntry : terms.entrySet()){
             addPostings(termEntry, postings);
         }
-        return ranker.getRankedDocuments(postings, selectedDocuments, k, b, docCount, averageDocLength, resultSize);
+        return ranker.getRankedDocuments(postings, documents, k, b, docCount, averageDocLength, resultSize);
     }
 
     /**
@@ -216,7 +221,7 @@ public class Searcher {
             String docID = strings[0];
 
             // Add, if not filtering OR (filtering AND document is in the selected set)
-            if (filterByCities && !selectedDocuments.containsKey(docID)) continue;
+            if (filterByCities && !documents.containsKey(docID)) continue;
             String[] posting = {docID, strings[1], strings[2], strings[3]};
             termPostings.add(posting);
         }
@@ -234,7 +239,11 @@ public class Searcher {
             term = term.toLowerCase();
             termData = dictionary.get(term);
         }
-        if (termData == null) return null; // term is not in dictionary!
+        if (termData == null) { // then term appears in upper case in dictionary
+            term = term.toUpperCase();
+            termData = dictionary.get(term);
+        }
+        if (termData == null) return null; // then term is not in dictionary!
         else {
             termDataPointer[0] = termData[0];
             termDataPointer[1] = termData[1];
@@ -260,4 +269,9 @@ public class Searcher {
         reader.close();
         return stopWords;
     }
+
+//    public Doc getDoc(String corpusPath, String DocName) throws IOException {
+//        HashMap<String, String[]> allDocuments = getDocuments(false);
+//        ReadFile.read(corpusPath + "\\" + )
+//    }
 }
