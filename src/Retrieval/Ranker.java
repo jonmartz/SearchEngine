@@ -48,7 +48,7 @@ public class Ranker {
                 double value = 1;
                 value *= getBM25Factor(tf, docCount, docLength, avgDocLength, qf, df, K, b);
                 value *= getPositionsInDocFactor(positionsInDoc, docLength);
-                if (inTitle.equals("t")) value *= value; // being in title is important!
+                if (inTitle.equals("t")) value *= 2; // being in title is important!
 
                 // update rank of doc
                 if (!documentsMap.containsKey(docID)) documentsMap.put(docID, 0.0);
@@ -121,7 +121,7 @@ public class Ranker {
      * @param docLength of doc
      * @return factor
      */
-    private double getPositionsInDocFactor(long[] positions, int docLength){
+    private double getPositionsInDocFactor(long[] positions, double docLength){
         double factor = 1;
         for(long position : positions) factor *= (position/docLength);
         return 1 - factor;
