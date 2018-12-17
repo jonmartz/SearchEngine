@@ -1,5 +1,6 @@
 package Retrieval;
 
+import java.awt.List;
 import java.util.*;
 
 /**
@@ -21,28 +22,24 @@ public class Ranker {
      * @return list of documents sorted by rank
      */
     public SortedSet<Map.Entry<String, Double>> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
-                                                                   HashMap<String, String[]> documents,
-                                                                   double K, double b, int docCount, double avgDocLength,
-                                                                   int resultSize) {
+                                                                       HashMap<String, String[]> documents,
+                                                                       double K, double b, int docCount, double avgDocLength,int resultSize) {
+
+        HashMap<String, double[]> documentsMapBef = getMapOfDocumentsBeforeRank(postings, documents, K, b, docCount, avgDocLength);
         HashMap<String, Double> documentsMap = new HashMap<>();
-        for (ArrayList<String[]> posting : postings) {
-            String[] termData = posting.get(0);
-            for (int i = 1; i < posting.size(); i++) {
-                String[] doc = posting.get(i);
-                String docID = doc[0];
-                if (!documentsMap.containsKey(docID)) documentsMap.put(docID, 0.0);
-                int tf = Integer.parseInt(doc[2]);
-                int docLength = Integer.parseInt(documents.get(docID)[0]);
-                int qf = Integer.parseInt(termData[2]);
-                int df = Integer.parseInt(termData[1]);
-                double value = BM25(tf, docCount, docLength, avgDocLength, qf, df, K, b);
-                documentsMap.replace(docID, documentsMap.get(docID) + value);
-            }
+        //todo: calculate formula of rank
+        for (Map.Entry<String, double[]> document : documentsMapBef.entrySet()) {
+            double ranked = 1;
+            double[] rankBef = document.getValue();
+            rankBef[2] = 1 - rankBef[2];
+            for(double val : rankBef)
+                ranked = ranked*val;
+            documentsMap.put(document.getKey(),ranked);
         }
         // sort docs by rank
         SortedSet<Map.Entry<String, Double>> rankedDocuments = new TreeSet<>(new RankComparator());
         rankedDocuments.addAll(documentsMap.entrySet());
-
+//gfdfgdfgd
         // get top (resultSize) or less
         SortedSet<Map.Entry<String, Double>> topDocuments = new TreeSet<>(new RankComparator());
         int count = 0;
@@ -54,6 +51,58 @@ public class Ranker {
         return topDocuments;
     }
 
+    private HashMap<String, double[]> getMapOfDocumentsBeforeRank(ArrayList<ArrayList<String[]>> postings,
+                                                                  HashMap<String, String[]> documents,
+                                                                  double K, double b, int docCount, double avgDocLength){
+        HashMap<String, double[]> documentsMap = new HashMap<>();
+        for (ArrayList<String[]> posting : postings) {
+            String[] termData = posting.get(0);
+            for (int i = 1; i < posting.size(); i++) {
+                String[] doc = posting.get(i);
+        //BM25
+                double BM25 = getBM25(termData[1], docCount, documents.get(doc[0])[0], avgDocLength,
+                        termData[2] , doc[2], K, b);
+                double [] values = {0.0,0.0,0.0};
+                if (!documentsMap.containsKey(doc[0])) {
+                    documentsMap.put(doc[0],values);
+                }
+                else
+                    values = documentsMap.get(doc[0]);
+                values[0] = documentsMap.get(doc[0])[0] + BM25;
+        //in Titele
+                if(doc[1] == "t")
+                    values[1] = documentsMap.get(doc[0])[1] + 1;
+                else
+                    values[1] = documentsMap.get(doc[0])[1] + 0.5;
+        //position in text: increase value if the position of term in doc in first
+                values[2] = documentsMap.get(doc[0])[2] * getPositionIntext(doc[3],documents.get(doc[0])[0]);
+                //update all score doc values
+                documentsMap.replace(doc[0],values);
+            }
+        }
+        return documentsMap;
+    }
+
+    /**
+     * Calculate the BM25 for the given term from the query and document
+     * @param tfInStr            term frequency in doc
+     * @param docCount      number of docs in corpus
+     * @param docLengthInStr     length of doc
+     * @param avgDocLength  average doc length
+     * @param qfInStr            term frequency in query
+     * @param dfInStr            term document frequency
+     * @param K             give the upper bound
+     * @param b             normalizer
+     * @return              BM25 calculation
+     */
+    private double getBM25(String tfInStr, int docCount, String docLengthInStr, double avgDocLength,
+                           String qfInStr, String dfInStr, double K, double b) {
+        int tf = Integer.parseInt(tfInStr);
+        int docLength = Integer.parseInt(docLengthInStr);
+        int qf = Integer.parseInt(qfInStr);
+        int df = Integer.parseInt(dfInStr);
+        return getBM25Formula(tf, docCount, docLength, avgDocLength, qf, df, K, b);
+    }
     /**
      * Calculate the BM25 for the given term from the query and document
      * @param tf            term frequency in doc
@@ -66,11 +115,31 @@ public class Ranker {
      * @param b             normalizer
      * @return              BM25 calculation
      */
-    private double BM25(double tf, double docCount, double docLength, double avgDocLength, double qf, double df, double K, double b) {
-        double numerator = qf * tf * (K + 1);
-        double denominator = tf + K * (1 - b + b * docLength / avgDocLength);
-        double log = Math.log((docCount + 1) / df);
-        return numerator * log / denominator;
+    private double getBM25Formula(int tf, int docCount, int docLength, double avgDocLength,
+                                  int qf, int df, double K, double b) {
+        double numerator = qf * df * (K + 1);
+        double denominator = df + (K * (1 - b + (b * (Math.abs(docLength) / avgDocLength))));
+        double inLog = Math.log10((docCount + 1) / tf);
+        return (double) ((numerator * inLog) / denominator);
+    }
+
+    /**
+     *
+     * @param positionsInDoc
+     * @param DocLength
+     * @return
+     */
+    private double getPositionIntext(String positionsInDoc,String DocLength){
+        String positionInDocB = positionsInDoc.substring(1,positionsInDoc.length());
+        String[] positions = positionInDocB.split(" ");
+        double positionDivideDocLength = 1;
+        int docLength = Integer.parseInt(DocLength);
+        for(String positionStr : positions){
+            int position = Integer.parseInt(positionStr);
+            positionDivideDocLength = positionDivideDocLength *(position/docLength);
+        }
+        return positionDivideDocLength;
+
     }
 
     /**
