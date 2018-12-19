@@ -20,15 +20,16 @@ public class Ranker {
      * @param avgDocLength from doc index
      * @return list of documents sorted by rank
      */
-    public SortedSet<Map.Entry<String, Double>> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
-                                                                   HashMap<String, String[]> documents,
-                                                                   double K, double b, int docCount, double avgDocLength,
-                                                                   int resultSize) {
-        HashMap<String, Double> documentsMap = new HashMap<>();
+    public ArrayList<String> getRankedDocuments(ArrayList<ArrayList<String[]>> postings,
+                                                HashMap<String, String[]> documents, double K,
+                                                double b, int docCount, double avgDocLength, int resultSize) {
+
+        HashMap<String, RankedDoc> rankedDocs = new HashMap<>(); // to hold and rank all docs
         for (ArrayList<String[]> posting : postings) {
 
             // Get general term data
             String[] termData = posting.get(0);
+            String term = termData[0];
             int qf = Integer.parseInt(termData[2]);
             int df = Integer.parseInt(termData[1]);
             long[] positionsInQuery = toLongArray(termData[3].trim().split(" "));
@@ -38,36 +39,42 @@ public class Ranker {
 
                 // get doc posting data
                 String[] docPosting = posting.get(i);
-                String docID = docPosting[0];
+                String docName = docPosting[0];
                 String inTitle = docPosting[1];
                 int tf = Integer.parseInt(docPosting[2]);
-                int docLength = Integer.parseInt(documents.get(docID)[0]);
+                int docLength = Integer.parseInt(documents.get(docName)[0]);
                 long[] positionsInDoc = toLongArray(docPosting[3].trim().split(" "));
 
                 // Calculate all rank factors of doc
                 double value = 1;
                 value *= getBM25Factor(tf, docCount, docLength, avgDocLength, qf, df, K, b);
-                value *= getPositionsInDocFactor(positionsInDoc, docLength);
+//                value *= getPositionsInDocFactor(positionsInDoc, docLength, 1);
                 if (inTitle.equals("t")) value *= 2; // being in title is important!
 
                 // update rank of doc
-                if (!documentsMap.containsKey(docID)) documentsMap.put(docID, 0.0);
-                documentsMap.replace(docID, documentsMap.get(docID) + value);
+                RankedDoc rankedDoc = rankedDocs.get(docName);
+                if (rankedDoc == null) {
+                    rankedDoc = new RankedDoc(docName);
+                    rankedDocs.put(docName, rankedDoc);
+                }
+                rankedDoc.value += value;
+                rankedDoc.intersection++;
+                if (Character.isUpperCase(term.charAt(0))) rankedDoc.entities++;
             }
         }
         // sort docs by rank
-        SortedSet<Map.Entry<String, Double>> rankedDocuments = new TreeSet<>(new RankComparator());
-        rankedDocuments.addAll(documentsMap.entrySet());
+        SortedSet<RankedDoc> sortedRankedDocs = new TreeSet<>(new RankComparator());
+        sortedRankedDocs.addAll(rankedDocs.values());
 
         // get top (resultSize) or less
-        SortedSet<Map.Entry<String, Double>> topDocuments = new TreeSet<>(new RankComparator());
+        ArrayList<String> topRankedDocNames = new ArrayList<>();
         int count = 0;
-        for (Map.Entry<String, Double> document : rankedDocuments){
-            topDocuments.add(document);
+        for (RankedDoc rankedDoc : sortedRankedDocs){
+            topRankedDocNames.add(rankedDoc.name);
             count++;
             if (count == resultSize) break;
         }
-        return topDocuments;
+        return topRankedDocNames;
     }
 
     /**
@@ -102,14 +109,20 @@ public class Ranker {
 
     /**
      * Class for comparing ranks of docs and getting a sorted list.
-     * The higher the rank, the higher the priority of the document
+     * If doc1 has more terms from query than doc2, doc1 is better.
+     * Else if doc1 has more UpperCase terms than doc2, doc1 is better.
+     * Else if doc1 has more value than doc2, doc1 is better.
      */
-    private class RankComparator implements Comparator<Map.Entry<String, Double>>
+    private class RankComparator implements Comparator<RankedDoc>
     {
         @Override
-        public int compare(Map.Entry<String, Double> entry1, Map.Entry<String, Double> entry2) {
-            if (entry1.getValue() < entry2.getValue()) return 1;
-            if (entry1.getValue() > entry2.getValue()) return -1;
+        public int compare(RankedDoc doc1, RankedDoc doc2) {
+            if (doc1.intersection < doc2.intersection) return 1;
+            if (doc1.intersection > doc2.intersection) return -1;
+            if (doc1.entities > doc2.entities) return 1;
+            if (doc1.entities < doc2.entities) return -1;
+            if (doc1.value < doc2.value) return 1;
+            if (doc1.value > doc2.value) return -1;
             return 0;
         }
     }
@@ -119,11 +132,33 @@ public class Ranker {
      * factor = 1 - (p1/docLen)*(p2/docLen)*...(pn/docLen)
      * @param positions of term in doc
      * @param docLength of doc
+     * @param positionsToCount number of positions before stopping
      * @return factor
      */
-    private double getPositionsInDocFactor(long[] positions, double docLength){
+    private double getPositionsInDocFactor(long[] positions, double docLength, int positionsToCount){
         double factor = 1;
-        for(long position : positions) factor *= (position/docLength);
+        for(int i = 0; i < positionsToCount; i++) {
+            long position = positions[i];
+            factor *= (position/docLength);
+        }
         return 1 - factor;
+    }
+
+    /**
+     * Class for sorting the ranked docs
+     */
+    private class RankedDoc {
+        /** name of doc */
+        public String name = "";
+        /** value from all sorts of formula like BM25 */
+        public double value = 0.0;
+        /** size of the intersection of Query and Doc */
+        public int intersection = 0;
+        /** number of terms that are in UpperCase in dictionary */
+        public int entities = 0;
+
+        public RankedDoc(String name) {
+            this.name = name;
+        }
     }
 }

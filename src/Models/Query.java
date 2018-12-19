@@ -1,8 +1,5 @@
 package Models;
-
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.SortedSet;
+import java.util.ArrayList;
 
 /**
  * Represents a query
@@ -15,8 +12,6 @@ public class Query {
     public String desc;
     public String narr;
 
-    /**
-     * the results of the query, in the from" docID, rank
-     */
-    public SortedSet<Map.Entry<String, Double>> result;
+    /** the results of the query, in the from" docID, rank */
+    public ArrayList<String> result;
 }

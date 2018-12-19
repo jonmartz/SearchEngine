@@ -4,9 +4,13 @@ import Indexing.Indexer;
 import Indexing.ReadFile;
 import Models.Doc;
 import Models.Query;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.Struct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -145,7 +149,7 @@ public class Searcher {
      * @param useStemming true to use stemming
      * @return list of relevant documents
      */
-    public SortedSet<Map.Entry<String, Double>> getResult(Query query, boolean useStemming) throws IOException {
+    public ArrayList<String> getResult(Query query, boolean useStemming) throws IOException {
 
         // get terms from query
         LinkedList<String> parsedSentence = indexer.getParsedSentence(query.title, stopWords, useStemming);
@@ -270,8 +274,31 @@ public class Searcher {
         return stopWords;
     }
 
-//    public Doc getDoc(String corpusPath, String DocName) throws IOException {
-//        HashMap<String, String[]> allDocuments = getDocuments(false);
-//        ReadFile.read(corpusPath + "\\" + )
-//    }
+    /**
+     * Get the document's structure
+     * @param corpusPath of corpus
+     * @param docName of doc to retrieve
+     * @return doc's text
+     */
+    public String getDocString(String corpusPath, String docName) throws IOException {
+        String inputPath = indexPath + "\\documents";
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(inputPath), StandardCharsets.UTF_8));
+        String line = reader.readLine(); // skip first line
+        String file = "";
+        int docPosition = 0;
+        while ((line = reader.readLine()) != null) {
+            String[] strings = (line + "\\|").split("\\|");
+            if (strings[0].equals(docName)){
+                file = strings[1];
+                docPosition = Integer.parseInt(strings[2]);
+                break;
+            }
+        }
+        reader.close();
+        if (file.isEmpty()) return null;
+        ArrayList<String> docsInFile = ReadFile.read(corpusPath + "\\" + file + "\\" + file);
+//        return Jsoup.parse(docsInFile.get(docPosition), "", Parser.xmlParser());
+        return docsInFile.get(docPosition);
+    }
 }

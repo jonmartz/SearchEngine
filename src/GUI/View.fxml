@@ -116,6 +116,16 @@
                               <Button fx:id="searchTermPostingsButton" mnemonicParsing="false" onAction="#searchTermPostings" text="Get term postings" />
                            </graphic>
                         </MenuItem>
+                        <MenuItem mnemonicParsing="false">
+                           <graphic>
+                              <TextField fx:id="searchDocumentTextField" promptText="Enter document ID" />
+                           </graphic>
+                        </MenuItem>
+                        <MenuItem mnemonicParsing="false">
+                           <graphic>
+                              <Button fx:id="searchDocumentButton" mnemonicParsing="false" onAction="#searchDocument" text="Print document text" />
+                           </graphic>
+                        </MenuItem>
                     </items>
                   </Menu>
                         <Menu mnemonicParsing="false" text="Help">
@@ -173,7 +183,7 @@
                                 <Insets left="10.0" top="5.0" />
                             </GridPane.margin>
                         </Separator>
-                        <Text fx:id="commentsBox" fill="GREEN" strokeType="OUTSIDE" strokeWidth="0.0" text="CommentsBox" GridPane.rowIndex="6" />
+                        <Text fx:id="commentsBox" fill="GREEN" strokeType="OUTSIDE" strokeWidth="0.0" GridPane.rowIndex="6" />
                     </children>
                     <padding>
                         <Insets right="10.0" />

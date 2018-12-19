@@ -10,12 +10,11 @@ import java.util.ArrayList;
 public class ReadFile {
 
     /**
-     * Split the file by the <tag> and get the list of strings
+     * Split the file by the <DOC> tag and get the list of strings
      * @param path of file
-     * @param tag to split with
      * @return list of strings
      */
-    public static ArrayList<String> read(String path, String tag) throws IOException {
+    public static ArrayList<String> read(String path) throws IOException {
 
         ArrayList<String> docsInFile = new ArrayList<>();
         BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -23,14 +22,14 @@ public class ReadFile {
         StringBuilder stringBuilder = new StringBuilder();
         String line = reader.readLine();
         while (line != null) {
-            if (line.contains("<" + tag + ">")) {
+            if (line.contains("<DOC>")) {
                 stringBuilder.append(line + "\n");
                 line = reader.readLine();
-                while (line != null && !line.contains("</" + tag + ">")) {
+                while (line != null && !line.contains("</DOC>")) {
                     stringBuilder.append(line + "\n");
                     line = reader.readLine();
                 }
-                if (line != null && line.contains("</" + tag + ">")){
+                if (line != null && line.contains("</DOC>")){
                     stringBuilder.append(line);
                     docsInFile.add(stringBuilder.toString());
                     stringBuilder = new StringBuilder();

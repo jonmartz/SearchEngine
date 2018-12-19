@@ -7,12 +7,10 @@ import Retrieval.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Paint;
@@ -90,6 +88,8 @@ public class Controller implements Initializable {
     public TextField searchTermPostingsTextField;
     public Button searchTermPostingsButton;
     public TextField resultSizeTextField;
+    public TextField searchDocumentTextField;
+    public Button searchDocumentButton;
 
     /**
      * indicate whether the loaded dictionary is from an index that was built using stemming or not
@@ -486,6 +486,16 @@ public class Controller implements Initializable {
     }
 
     /**
+     * Prints a document's text and title to the console
+     */
+    public void searchDocument() throws IOException {
+        int resultSize = Integer.parseInt(resultSizeTextField.getText());
+        Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b, resultSize);
+        String docID = searchDocumentTextField.getText();
+        System.out.println(searcher.getDocString(corpusPath, docID));
+    }
+
+    /**
      * Class that represents an entry from the index dictionary. Its purpose is only to make the TableView
      * for displaying the dictionary in the GUI.
      */
@@ -615,8 +625,8 @@ public class Controller implements Initializable {
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path, false)));
         String newLine = System.getProperty("line.separator");
         for (Query query : queries) {
-            for (Map.Entry<String, Double> doc : query.result) {
-                String[] line = {query.num, "0", doc.getKey(), "0", "0.0", "a"};
+            for (String docName : query.result) {
+                String[] line = {query.num, "0", docName, "0", "0.0", "a"};
                 out.write(String.join(" ", line) + newLine);
             }
         }
@@ -683,9 +693,8 @@ public class Controller implements Initializable {
     private void displayQueryResult() {
         ObservableList<ResultEntry> items = FXCollections.observableArrayList();
         int rank = 1;
-        for (Map.Entry<String, Double> rankedDocument : query.result){
-            String docID = rankedDocument.getKey();
-            items.add(new ResultEntry(docID, String.valueOf(rank++)));
+        for (String rankedDocName : query.result){
+            items.add(new ResultEntry(rankedDocName, String.valueOf(rank++)));
         }
         queryResultsTable.setItems(items);
         queryResultsTable.getSortOrder().add(queryResultsRankCol);
