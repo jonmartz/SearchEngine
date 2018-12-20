@@ -31,7 +31,7 @@ public class Ranker {
             String[] termData = posting.get(0);
             String term = termData[0];
             int qf = Integer.parseInt(termData[2]);
-            int df = Integer.parseInt(termData[1]);
+            int tf = Integer.parseInt(termData[1]);
             long[] positionsInQuery = toLongArray(termData[3].trim().split(" "));
 
             // For all doc postings of term
@@ -41,7 +41,7 @@ public class Ranker {
                 String[] docPosting = posting.get(i);
                 String docName = docPosting[0];
                 String inTitle = docPosting[1];
-                int tf = Integer.parseInt(docPosting[2]);
+                int df = Integer.parseInt(docPosting[2]);
                 int docLength = Integer.parseInt(documents.get(docName)[0]);
                 long[] positionsInDoc = toLongArray(docPosting[3].trim().split(" "));
 

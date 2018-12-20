@@ -474,7 +474,7 @@ public class Controller implements Initializable {
             for (String term : parsedSentence) terms.put(term, positions);
             ArrayList<ArrayList<String[]>> postings = new ArrayList<>();
             for (Map.Entry<String, ArrayList<Integer>> termEntry : terms.entrySet())
-                searcher.addPostings(termEntry, postings);
+                searcher.addPostings(termEntry,"f",postings);
             for (ArrayList<String[]> posting : postings){
                 for (String[] doc : posting){
                     System.out.println(String.join(" ", doc));
