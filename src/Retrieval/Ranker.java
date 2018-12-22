@@ -49,7 +49,7 @@ public class Ranker {
                 double value = 1;
                 value *= getBM25Factor(tf, docCount, docLength, avgDocLength, qf, df, K, b);
 //                value *= getPositionsInDocFactor(positionsInDoc, docLength, 1);
-                if (inTitle.equals("t")) value *= 2; // being in title is important!
+//                if (inTitle.equals("t")) value *= 2; // being in title is important!
 
                 // update rank of doc
                 RankedDoc rankedDoc = rankedDocs.get(docName);
@@ -130,6 +130,7 @@ public class Ranker {
     /**
      * Calculate the positions in doc factor which is:
      * factor = 1 - (p1/docLen)*(p2/docLen)*...(pn/docLen)
+     * where n = positionsToCount
      * @param positions of term in doc
      * @param docLength of doc
      * @param positionsToCount number of positions before stopping

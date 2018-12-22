@@ -158,6 +158,10 @@ public class Controller implements Initializable {
         buttonColumn.setCellValueFactory(new PropertyValueFactory<>("null")); // just for setting up buttons
         buttonColumn.setCellFactory(getButtonCallback());
 
+        // entities table
+        entitiesEntityCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("entity"));
+        entitiesRankCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("rank"));
+
         setKforBM25();
         setBforBM25();
     }
@@ -623,11 +627,10 @@ public class Controller implements Initializable {
             if (getResultFromWarning(text) == ButtonType.NO) return;
         }
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path, false)));
-        String newLine = System.getProperty("line.separator");
         for (Query query : queries) {
             for (String docName : query.result) {
                 String[] line = {query.num, "0", docName, "0", "0.0", "a"};
-                out.write(String.join(" ", line) + newLine);
+                out.write(String.join(" ", line) + "\n");
             }
         }
         out.close();
@@ -664,6 +667,7 @@ public class Controller implements Initializable {
             }
 
             saveResultsButton.setDisable(false);
+            entitiesTable.getItems().clear();
 
         }catch (Exception e) {
             showComment(commentsQueryBox,"RED", e.getMessage());
@@ -820,8 +824,26 @@ public class Controller implements Initializable {
      * @param docID of doc
      */
     private void showEntities(String docID) {
-        // todo: implement
+        try {
+            String path = getIndexFullPath() + "\\entities";
+            BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
+            String line = "";
+            ObservableList<EntityEntry> items = FXCollections.observableArrayList();
+            while ((line = reader.readLine()) != null) {
+                String[] strings = line.split("\\|");
+                if (strings[0].equals(docID)) {
+                    String[] entities = strings[1].split(" ");
+                    int rank = 1;
+                    for (String entity : entities) items.add(new EntityEntry(entity, rank++));
+                    break;
+                }
+            }
+            entitiesTable.setItems(items);
+            entitiesTable.getSortOrder().add(entitiesRankCol);
+        } catch (IOException e) {e.printStackTrace();}
     }
+
+
 
     /**
      * Class for displaying the query results in the table
@@ -853,6 +875,42 @@ public class Controller implements Initializable {
         /**
          * getter
          * @return value
+         */
+        public int getRank() {
+            return rank;
+        }
+    }
+
+    /**
+     * Class that represents an entry from the entities table. Its purpose is only to make the TableView
+     * for displaying the entities in the GUI.
+     */
+    public static class EntityEntry{
+
+        private String entity;
+        private int rank;
+
+        /**
+         * Constructor
+         * @param entity name of term
+         * @param rank   of entity in doc
+         */
+        public EntityEntry(String entity, int rank) {
+            this.entity = entity;
+            this.rank = rank;
+        }
+
+        /**
+         * getter
+         * @return entity
+         */
+        public String getEntity() {
+            return entity;
+        }
+
+        /**
+         * getter
+         * @return rank
          */
         public int getRank() {
             return rank;
