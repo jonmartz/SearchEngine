@@ -49,7 +49,7 @@ public class Ranker {
                 double value = 1;
                 value *= getBM25Factor(tf, docCount, docLength, avgDocLength, qf, df, K, b);
 //                value *= getPositionsInDocFactor(positionsInDoc, docLength, 1);
-//                if (inTitle.equals("t")) value *= 2; // being in title is important!
+                if (inTitle.equals("t")) value *= 2; // being in title is important!
 
                 // update rank of doc
                 RankedDoc rankedDoc = rankedDocs.get(docName);
@@ -117,10 +117,10 @@ public class Ranker {
     {
         @Override
         public int compare(RankedDoc doc1, RankedDoc doc2) {
-            if (doc1.intersection < doc2.intersection) return 1;
-            if (doc1.intersection > doc2.intersection) return -1;
-            if (doc1.entities > doc2.entities) return 1;
-            if (doc1.entities < doc2.entities) return -1;
+//            if (doc1.intersection < doc2.intersection) return 1;
+//            if (doc1.intersection > doc2.intersection) return -1;
+//            if (doc1.entities > doc2.entities) return 1;
+//            if (doc1.entities < doc2.entities) return -1;
             if (doc1.value < doc2.value) return 1;
             if (doc1.value > doc2.value) return -1;
             return 0;

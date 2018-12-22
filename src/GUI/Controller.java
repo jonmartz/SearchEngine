@@ -832,7 +832,7 @@ public class Controller implements Initializable {
             while ((line = reader.readLine()) != null) {
                 String[] strings = line.split("\\|");
                 if (strings[0].equals(docID)) {
-                    String[] entities = strings[1].split(" ");
+                    String[] entities = strings[1].split(",");
                     int rank = 1;
                     for (String entity : entities) items.add(new EntityEntry(entity, rank++));
                     break;

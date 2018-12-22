@@ -544,6 +544,7 @@ public class Indexer {
      * Is responsible for merging all the temporal postings. The terms in all these
      * postings are in uppercase, but the merger checks weather the terms shows in the
      * dictionary as upper/lowercase to write it to the final posting accordingly.
+     * Is also responsible for making the entities list
      */
     private class Merger implements Runnable {
 
@@ -660,7 +661,7 @@ public class Indexer {
                     Entity entity = entities.poll();
                     entityNames.addFirst(entity.name);
                 }
-                String line = docName + "|" + String.join(" ", entityNames) + "\n";
+                String line = docName + "|" + String.join(",", entityNames) + "\n";
                 out.write(line);
             }
             out.close();
