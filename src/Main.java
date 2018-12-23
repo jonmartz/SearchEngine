@@ -1,9 +1,11 @@
+import Retrieval.Semantic;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,7 +29,10 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-    public static void main(String[] args) {
-        launch(args);
+    public static void main(String[] args) throws IOException {
+        String[] glovePath = {"C:","JavaProject","SearchEngine","glove.6B.50d.txt"};
+        Semantic semantic = new Semantic(String.join("\\", glovePath));
+        semantic.SemnticsFile(10);
+        //launch(args);
     }
 }

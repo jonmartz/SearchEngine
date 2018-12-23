@@ -134,7 +134,7 @@ public class Indexer {
     }
 
     /**
-     * Build the suffixes to trim in word list
+     * Build the suffixes to trim in word listF
      * @return set of suffixes
      */
     private HashSet getStopSuffixes() {
