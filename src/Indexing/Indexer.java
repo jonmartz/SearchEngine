@@ -544,8 +544,14 @@ public class Indexer {
      * Is responsible for merging all the temporal postings. The terms in all these
      * postings are in uppercase, but the merger checks weather the terms shows in the
      * dictionary as upper/lowercase to write it to the final posting accordingly.
+     * Is also responsible for making the entities list
      */
     private class Merger implements Runnable {
+
+        /**
+         * For mapping every doc with it's 5 most dominant entities
+         */
+        private HashMap<String, PriorityQueue<Entity>> entitiesMap;
 
         /**
          * Merge all temporal postings.
@@ -566,6 +572,7 @@ public class Indexer {
          * terms that start with that character.
          */
         private void mergePostings() throws IOException {
+            entitiesMap = new HashMap<>();
             String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             ArrayList<BufferedReader> postings = new ArrayList<>();
             ArrayList<String> paths = new ArrayList<>();
@@ -594,6 +601,8 @@ public class Indexer {
                             terms.put(term, termPostings);
                         }
                         String line = posting.readLine();
+
+                        // Get term postings
                         while (line != null && !line.equals("")){
                             termPostings.add(line);
                             line = posting.readLine();
@@ -622,6 +631,7 @@ public class Indexer {
                         termData[2] = mergedPosting.getFilePointer();
                         for (String line : entry.getValue()) {
                             mergedPosting.writeBytes(line + "\n");
+                            addEntity(term, line);
                         }
                         mergedPosting.writeBytes("\n");
                     }
@@ -633,6 +643,85 @@ public class Indexer {
             }
             for (BufferedReader posting : postings) posting.close();
             removeDir(Paths.get(index_path + "\\postings\\temp"));
+            writeEntities();
+        }
+
+        /**
+         * Write all entities to disk
+         */
+        private void writeEntities() throws IOException {
+            String path = index_path + "\\entities";
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path, false)));
+            for (Map.Entry<String, PriorityQueue<Entity>> entry: entitiesMap.entrySet()) {
+                String docName = entry.getKey();
+                PriorityQueue<Entity> entities = entry.getValue();
+                LinkedList<String> entityNames = new LinkedList<>();
+                // write entities in reversed order because they were sorted from least to most dominant in queue
+                while (!entities.isEmpty()){
+                    Entity entity = entities.poll();
+                    entityNames.addFirst(entity.name);
+                }
+                String line = docName + "|" + String.join(",", entityNames) + "\n";
+                out.write(line);
+            }
+            out.close();
+        }
+
+        /**
+         * Process the term to see if it's an entity, and add it to entities of doc if
+         * it's one of the top 5 entities.
+         * @param term to process
+         * @param posting of term to process
+         */
+        private void addEntity(String term, String posting) {
+            if (!Character.isUpperCase(term.charAt(0))) return; // if not uppercase then not entity
+            String[] strings = posting.split("\\|");
+            String docName = strings[0];
+            int tf = Integer.parseInt(strings[2]);
+            int firstPos = Integer.parseInt(strings[3].trim().split(" ")[0]);
+            PriorityQueue<Entity> entities = entitiesMap.get(docName);
+            if (entities == null){
+                entities = new PriorityQueue<>(new EntityComparator());
+                entitiesMap.put(docName, entities);
+            }
+            entities.add(new Entity(term, tf, firstPos));
+            if (entities.size() > 5) entities.remove();
+        }
+
+        /**
+         * For processing and ordering the list of entities for each doc
+         */
+        private class Entity {
+            public String name; // name of entity
+            public int tf; // tf of entity in doc
+            public int firstPos; // first position of entity in doc
+
+            /**
+             * Constructor
+             * @param name      of entity
+             * @param tf        of entity
+             * @param firstPos  of entity
+             */
+            public Entity(String name, int tf, int firstPos) {
+                this.name = name;
+                this.tf = tf;
+                this.firstPos = firstPos;
+            }
+        }
+
+        /**
+         * To sort the entities of documents, to least to most dominant.
+         */
+        private class EntityComparator implements Comparator<Entity>{
+
+            @Override
+            public int compare(Entity o1, Entity o2) {
+                if (o1.tf > o2.tf) return 1;
+                if (o1.tf< o2.tf) return -1;
+                if (o1.firstPos > o2.firstPos) return -1;
+                if (o1.firstPos < o2.firstPos) return 1;
+                return 0;
+            }
         }
     }
 

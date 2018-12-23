@@ -117,10 +117,10 @@ public class Ranker {
     {
         @Override
         public int compare(RankedDoc doc1, RankedDoc doc2) {
-            if (doc1.intersection < doc2.intersection) return 1;
-            if (doc1.intersection > doc2.intersection) return -1;
-            if (doc1.entities > doc2.entities) return 1;
-            if (doc1.entities < doc2.entities) return -1;
+//            if (doc1.intersection < doc2.intersection) return 1;
+//            if (doc1.intersection > doc2.intersection) return -1;
+//            if (doc1.entities > doc2.entities) return 1;
+//            if (doc1.entities < doc2.entities) return -1;
             if (doc1.value < doc2.value) return 1;
             if (doc1.value > doc2.value) return -1;
             return 0;
@@ -130,6 +130,7 @@ public class Ranker {
     /**
      * Calculate the positions in doc factor which is:
      * factor = 1 - (p1/docLen)*(p2/docLen)*...(pn/docLen)
+     * where n = positionsToCount
      * @param positions of term in doc
      * @param docLength of doc
      * @param positionsToCount number of positions before stopping
