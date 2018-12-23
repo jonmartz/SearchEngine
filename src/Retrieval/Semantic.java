@@ -16,40 +16,49 @@ public class Semantic {
     public ArrayList<String> getSemnticsOfTerms(ArrayList<String> terms,int resultSizeForEach)throws IOException {
         ArrayList<String> semanticsWords = new ArrayList<>();
         RandomAccessFile reader = new RandomAccessFile(glovePath, "rw");
-        HashMap<String,String> termsVectors = new HashMap<>();
+        HashMap<String,ArrayList<Double>> termsVectors = new HashMap<>();
         int count = terms.size();
         String line = reader.readLine();
+        //found terms vector
         while (line != null && count != 0 ) {
             String termInGlove = line.split(" ")[0];
-            if (terms.contains(termInGlove))
-                termsVectors.put(termInGlove, line.substring(termInGlove.length() + 1, line.length()));
+            if (terms.contains(termInGlove)) {
+                String[] vecTerm = line.substring(termInGlove.length() + 1, line.length()).split(" ");
+                ArrayList<Double> vector=new ArrayList<>();
+                for(String val:vecTerm)
+                   vector.add(Double.parseDouble(val));
+                termsVectors.put(termInGlove,vector);
+            }
+            line = reader.readLine();
+            count--;
         }
+        //found most close vector distance to term
         for(String term: terms){
             reader.seek(0);
             line = reader.readLine();
-            PriorityQueue<vectorDistance> priorityVecDis= new PriorityQueue<>();
+            PriorityQueue<vectorDistance> priorityVecDis= new PriorityQueue<>(new vecDisComparator());
             while (line != null) {
-                String otherTerm = line.split(" ")[0];
-                String vector = line.substring(otherTerm.length()+1,line.length());
-                /*
-                getVectorDistance()
-                vectorDistances.add
-                sortedRankedDocs.addAll(rankedDocs.values());
-
-                // get top (resultSize) or less
-                ArrayList<String> topRankedDocNames = new ArrayList<>();
-                int count = 0;
-                for (Ranker.RankedDoc rankedDoc : sortedRankedDocs){
-                    topRankedDocNames.add(rankedDoc.name);
-                    count++;
-                    if (count == resultSize) break;
-                }
-                return topRankedDocNames;
-
-                tDistance
-            */
+                vectorDistance vecDis = new vectorDistance(line.split(" ")[0]);
+                if(vecDis.term.equals(term))
+                    continue;
+                String [] vecOther = line.substring(vecDis.term.length()+1,line.length()).split(" ");
+                ArrayList<Double> vector=new ArrayList<>();
+                for(String val:vecOther)
+                    vector.add(Double.parseDouble(val));
+                vecDis.value = getVectorDistance(termsVectors.get(term),vector);
+                //if(priorityVecDis.size() < resultSizeForEach || priorityVecDis.);
+                  //  priorityVecDis.add(vecDis);
+                line = reader.readLine();
             }
+            for(vectorDistance vecD : priorityVecDis)
+                semanticsWords.add(vecD.term);
         }
+        return semanticsWords;
+    }
+
+    private double getVectorDistance(ArrayList<Double> vector1,ArrayList<Double> vector2){
+
+
     }
 
 
