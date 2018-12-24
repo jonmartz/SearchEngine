@@ -49,7 +49,7 @@ public class Ranker {
                 double value = 1;
                 value *= getBM25Factor(tf, docCount, docLength, avgDocLength, qf, df, K, b);
 //                value *= getPositionsInDocFactor(positionsInDoc, docLength, 1);
-                if (inTitle.equals("t")) value *= 2; // being in title is important!
+//                if (inTitle.equals("t")) value *= 2; // being in title is important!
 
                 // update rank of doc
                 RankedDoc rankedDoc = rankedDocs.get(docName);
