@@ -6,9 +6,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Stack;
 
 public class Main extends Application {
 
@@ -33,7 +32,11 @@ public class Main extends Application {
         String[] glovePath = {"C:","JavaProject","SearchEngine","glove.6B.50d.txt"};
         String[] stopWord = {"C:","JavaProject","SearchEngine","corpus","stop_words.txt"};
         Semantic semantic = new Semantic(String.join("\\", glovePath),String.join("\\",stopWord));
-        semantic.SemnticsFile(10);
+        Stack<String> synonym = semantic.semanticWords("car",10);
+        String d = synonym.peek();
+        //semantic.removeStopWordAndDelimiters();
+     //   semantic.SemanticsFile(10);
+
         //launch(args);
     }
 }

@@ -11,55 +11,97 @@ import java.util.*;
 public class Semantic {
     private String path;
     private HashSet<String> stop_words;
-
+    private ArrayList<String> glove;
     public Semantic(String Path,String stop_words_path) throws IOException {
         this.path = Path;
         this.stop_words = getStopWords(stop_words_path);
+        glove = new ArrayList<>();
     }
 
-    public void SemnticsFile(int resultSizeForEach)throws IOException {
-        BufferedReader readerTerm = new BufferedReader(new InputStreamReader(
-                new FileInputStream(path),StandardCharsets.UTF_8));
+    public Stack<String> semanticWords(String term,int resultSizeForEach) throws IOException {
+        removeStopWordAndDelimiters();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(path), StandardCharsets.UTF_8));
+        Stack<String> a = new Stack<>();
+        String lineTerm = reader.readLine();
+        boolean founded = false;
+        ArrayList<Double> vectorTerm = new ArrayList<>();
+        while(lineTerm != null){
+            if(lineTerm.split(" ")[0].equals(term)) {
+                vectorTerm = getVector(lineTerm.substring(term.length() + 1, lineTerm.length()),vectorTerm);
+                break;
+            }
+            lineTerm =reader.readLine();
+        }
+        reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(path), StandardCharsets.UTF_8));
+        lineTerm = reader.readLine();
+        PriorityQueue<vectorDistance> priorityVecDis = new PriorityQueue<>(new vecDisComparator());
+        while (lineTerm != null) {
+            String other = lineTerm.split(" ")[0];
+            if(lineTerm.split(" ")[0].equals(term)) {
+                lineTerm = reader.readLine();
+                continue;
+            }
+            ArrayList<Double> vectorOther = new ArrayList<>();
+            vectorDistance vecDis = new vectorDistance(other);
+            vectorOther = getVector(lineTerm.substring(other.length() + 1, lineTerm.length()),vectorOther);
+            vecDis.value = getVectorDistance(vectorTerm,vectorOther);
+            priorityVecDis.add(vecDis);
+            if (priorityVecDis.size() > resultSizeForEach) priorityVecDis.remove();
+            lineTerm = reader.readLine();
+        }
+        while(!priorityVecDis.isEmpty()) {
+            System.out.print(priorityVecDis.peek().term + "(" + priorityVecDis.peek().value + ")");
+           a.push(priorityVecDis.poll().term);
+        }
+        return  a;
+    }
+
+    public void removeStopWordAndDelimiters() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(path), StandardCharsets.UTF_8));
+        String[] newGlove = {"C:","JavaProject","SearchEngine","newglove.txt"};
+        OutputStreamWriter fstream = new OutputStreamWriter(
+                new FileOutputStream(String.join("\\",newGlove), true));
+        BufferedWriter out = new BufferedWriter(fstream);
+        String line = reader.readLine();
+        while (line != null) {
+            boolean isStopWord = false, isDel = false;
+            String term = line.split(" ")[0];
+            if (this.stop_words.contains(term)) isStopWord = true;
+            for (int i = 0; i < term.length(); i++)
+                if (!Character.isAlphabetic(term.charAt(i)))
+                    isDel = true;
+            if (isDel || isStopWord) {
+                line = reader.readLine();
+                continue;
+            }
+            out.write(line);
+            //glove.add(line);
+            line = reader.readLine();
+        }
+        out.close();
+    }
+
+    public void SemanticsFile(int resultSizeForEach)throws IOException {
         OutputStreamWriter fstream = new OutputStreamWriter(
                 new FileOutputStream("semantic_words.txt", true));
         BufferedWriter out = new BufferedWriter(fstream);
-        String[] del = {"'",":","-",".","@", "!", ";", "+", "?", "\"" , "*", "(", ")", "<", ">", "{", "}", "=", "[", "]", "#", "|", "&", ",", "`"};
-        String lineTerm = readerTerm.readLine();
-        while (lineTerm != null) {
-            boolean isStopWord = false ,isDel = false;
+        ArrayList<Double> vectorTerm = new ArrayList<>();
+        for(String lineTerm : glove) {
             String term = lineTerm.split(" ")[0];
-            if(this.stop_words.contains(term)) isStopWord= true;
-            for(String d:del)
-                if(d.equals(term))isDel = true;
-            if(isDel || isStopWord){
-                lineTerm = readerTerm.readLine();
-                continue;
-            }
-            ArrayList<Double> vectorTerm = getVector(lineTerm.substring(term.length() + 1, lineTerm.length()));
-            BufferedReader readerOther = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(path),StandardCharsets.UTF_8));
-            String lineOther = readerOther.readLine();
+            vectorTerm = getVector(lineTerm.substring(term.length() + 1, lineTerm.length()),vectorTerm);
             PriorityQueue<vectorDistance> priorityVecDis = new PriorityQueue<>(new vecDisComparator());
-            while (lineOther != null){
+            ArrayList<Double> vectorOther = new ArrayList<>();
+            for(String lineOther : glove) {
                 String other = lineOther.split(" ")[0];
-                isDel = false; isStopWord = false;
-                if(this.stop_words.contains(other))isStopWord = true;
-                for(String d:del)
-                    if(d.equals(other))isDel = true;
-                if(isDel || isStopWord){
-                    lineOther = readerOther.readLine();
-                    continue;
-                }
                 vectorDistance vecDis = new vectorDistance(other);
-                if(vecDis.term.equals(term)) {
-                    lineOther = readerOther.readLine();
-                    continue;
-                }
-                ArrayList<Double> vectorOther = getVector(lineOther.substring(other.length() + 1, lineOther.length()));
+                if(vecDis.term.equals(term)) continue;
+                vectorOther = getVector(lineOther.substring(other.length() + 1, lineOther.length()),vectorOther);
                 vecDis.value = getVectorDistance(vectorTerm,vectorOther);
                 priorityVecDis.add(vecDis);
                 if (priorityVecDis.size() > resultSizeForEach) priorityVecDis.remove();
-                lineOther = readerOther.readLine();
             }
             out.write(term +": ");
             System.out.print(term+ ": ");
@@ -72,13 +114,11 @@ public class Semantic {
                 System.out.print(priorityVecDis.peek().term+ ", ");
                 out.write(priorityVecDis.poll().term+", ");
             }
-            lineTerm = readerTerm.readLine();
         }
     }
 
-    private ArrayList<Double> getVector(String vector) {
+    private ArrayList<Double> getVector(String vector,ArrayList<Double> vec) {
         String[] vecTerm = vector.split(" ");
-        ArrayList<Double> vec = new ArrayList<>();
         for (String val : vecTerm)
             vec.add(Double.parseDouble(val));
         return vec;
