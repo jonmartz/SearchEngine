@@ -31,7 +31,8 @@ public class Main extends Application {
 
     public static void main(String[] args) throws IOException {
         String[] glovePath = {"C:","JavaProject","SearchEngine","glove.6B.50d.txt"};
-        Semantic semantic = new Semantic(String.join("\\", glovePath));
+        String[] stopWord = {"C:","JavaProject","SearchEngine","corpus","stop_words.txt"};
+        Semantic semantic = new Semantic(String.join("\\", glovePath),String.join("\\",stopWord));
         semantic.SemnticsFile(10);
         //launch(args);
     }
