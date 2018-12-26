@@ -652,7 +652,7 @@ public class Controller implements Initializable {
                 query = new Query();
                 query.num = "000";
                 query.title = queryTextField.getText();
-                query.result = searcher.getResult(query, useStemming.isSelected());
+                query.result = searcher.getResult(query, useStemming.isSelected(), semanticsCheckBox.isSelected(), 2);
                 queries.add(query);
                 displayQueryResult();
             }
@@ -661,7 +661,7 @@ public class Controller implements Initializable {
             else {
                 addQueries();
                 for (Query query : queries)
-                    query.result = searcher.getResult(query, useStemming.isSelected());
+                    query.result = searcher.getResult(query, useStemming.isSelected(), semanticsCheckBox.isSelected(), 2);
                 setQueriesChoiceBox();
                 querySelectChoiceBox.setVisible(true);
             }

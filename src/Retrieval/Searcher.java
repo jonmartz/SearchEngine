@@ -64,6 +64,13 @@ public class Searcher {
     private double k;
     private double b;
 
+    /**
+     * for semantics
+     */
+    private Semantic semantic;
+
+    private HashMap<String, String> synonymsMap;
+
 
     /**
      * Constructor
@@ -86,6 +93,7 @@ public class Searcher {
         this.k = k;
         this.b = b;
         this.resultSize = resultSize;
+        this.synonymsMap = new HashMap<>();
     }
 
     /**
@@ -149,10 +157,14 @@ public class Searcher {
      * @param useStemming true to use stemming
      * @return list of relevant documents
      */
-    public ArrayList<String> getResult(Query query, boolean useStemming) throws IOException {
+    public ArrayList<String> getResult(Query query, boolean useStemming, boolean useSemantics, int synonymsCount) throws IOException {
+
+        // Add synonymsMap in case of semantics
+        String queryText = query.title;
+        if (useSemantics) queryText = addSynonyms(queryText, synonymsCount);
 
         // get terms from query
-        LinkedList<String> parsedSentence = indexer.getParsedSentence(query.title, stopWords, useStemming);
+        LinkedList<String> parsedSentence = indexer.getParsedSentence(queryText, stopWords, useStemming);
         HashMap<String, ArrayList<Integer>> terms = new HashMap<>();
         int position = 0;
         for (String term : parsedSentence){ // add positions
@@ -168,6 +180,37 @@ public class Searcher {
             addPostings(termEntry, postings);
         }
         return ranker.getRankedDocuments(postings, documents, k, b, docCount, averageDocLength, resultSize);
+    }
+
+    /**
+     * Add a mapping for each term to it's synonymsMap, getting the synonymsMap from the Semantic class.
+     * @param queryText to add synonymsMap to
+     * @return query text with the added synonymsMap
+     */
+    private String addSynonyms(String queryText, int synonymsCount) throws IOException {
+        if (semantic == null) semantic = new Semantic();
+        LinkedList<String> terms = indexer.getParsedSentence(queryText, stopWords, false);
+        String newQueryText = "";
+        for (String term : terms){
+            boolean alphabetic = true;
+            for (int i = 0; i < term.length(); i++) {
+                if (!Character.isAlphabetic(term.charAt(i))) {
+                    alphabetic = false;
+                    break;
+                }
+            }
+            String synonymsString = "";
+            if (alphabetic) {
+                term = term.toLowerCase();
+                synonymsString = synonymsMap.get(term);
+                if (synonymsString == null) {
+                    synonymsString = semantic.getSynonyms(term, synonymsCount) + " ";
+                    synonymsMap.put(term, synonymsString);
+                }
+            }
+            newQueryText += term + " " + synonymsString;
+        }
+        return newQueryText;
     }
 
     /**
