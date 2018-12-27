@@ -7,6 +7,7 @@ import Retrieval.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -30,6 +31,9 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -90,6 +94,8 @@ public class Controller implements Initializable {
     public TextField resultSizeTextField;
     public TextField searchDocumentTextField;
     public Button searchDocumentButton;
+    public TextField synonymsCountTextField;
+    public Button trecevalButton;
 
     /**
      * indicate whether the loaded dictionary is from an index that was built using stemming or not
@@ -385,7 +391,7 @@ public class Controller implements Initializable {
      * @param visibility true to show the elements, false to hide them
      */
     private void statsVisible(boolean visibility) {
-//        commentsBox.setVisible(false);
+        commentsBox.setVisible(visibility);
         docCountValue.setVisible(visibility);
         termCountValue.setVisible(visibility);
         totalTimeValue.setVisible(visibility);
@@ -413,18 +419,21 @@ public class Controller implements Initializable {
      * Called when a query is selected from the drop down menu
      */
     public void querySelected() {
-        String queryNum = querySelectChoiceBox.getValue().toString().split(":")[0];
-        for (Query query : queries) {
-            if (query.num.equals(queryNum)) {
-                this.query = query;
-                displayQueryResult();
+        try {
+            String queryNum = querySelectChoiceBox.getValue().toString().split(":")[0];
+            for (Query query : queries) {
+                if (query.num.equals(queryNum)) {
+                    this.query = query;
+                    displayQueryResult();
+                }
             }
-        }
+        } catch (Exception ignored) {}
     }
 
     /**
      * Called when the user presses the stemming button. If the loaded dictionary is not from
      * an index built with/without stemming, makes part of the GUI invisible.
+     * Also modify the K for BM25 value, cause we found its different for each mode for better results.
      */
     public void pressedStemming() {
         if ((usedStemming && !useStemming.isSelected()) || (!usedStemming && useStemming.isSelected())) {
@@ -436,6 +445,8 @@ public class Controller implements Initializable {
             if (dictionaryView.getItems() != null) dictionaryView.setVisible(true);
             queryPane.setVisible(true);
         }
+        if (useStemming.isSelected()) bTextField.setText("0.38");
+        else bTextField.setText("0.2");
     }
 
     /**
@@ -497,6 +508,28 @@ public class Controller implements Initializable {
         Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b, resultSize);
         String docID = searchDocumentTextField.getText();
         System.out.println(searcher.getDocString(corpusPath, docID));
+    }
+
+    public void printTreceval() throws IOException {
+        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("results.txt", false)));
+        for (Query query : queries) {
+            for (String docName : query.result) {
+                String[] line = {query.num, "0", docName, "0", "0.0", "a"};
+                out.write(String.join(" ", line) + "\n");
+            }
+        }
+        out.close();
+
+        Runtime rt = Runtime.getRuntime();
+        rt.exec("cmd /c C:\\treceval\\withStemming\\1.bat");
+        BufferedReader in = new BufferedReader(new
+                InputStreamReader(new FileInputStream("out.txt")));
+        String line;
+        int i = 0;
+        while ((line = in.readLine()) != null) {
+            System.out.println(line);
+            if (i++ == 5) showComment(commentsQueryBox, "GREEN", line);
+        }
     }
 
     /**
@@ -619,7 +652,9 @@ public class Controller implements Initializable {
      * Save the query results in the desired folder. The file's name will be "results.txt"
      */
     public void saveResults() throws IOException {
-        String path = getDirectoryPath("Select folder to save results in") + "\\results.txt";
+        String path = getDirectoryPath("Select folder to save results in");
+        if (path == null) return;
+        path += "\\results.txt";
 
         // In case index already exists
         if (Files.exists(Paths.get(path))) {
@@ -642,6 +677,7 @@ public class Controller implements Initializable {
      */
     public void RUN() {
         try {
+            long startTime = System.currentTimeMillis();
             int resultSize = Integer.parseInt(resultSizeTextField.getText());
             Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b, resultSize);
             queries = new ArrayList<>();
@@ -652,7 +688,8 @@ public class Controller implements Initializable {
                 query = new Query();
                 query.num = "000";
                 query.title = queryTextField.getText();
-                query.result = searcher.getResult(query, useStemming.isSelected(), semanticsCheckBox.isSelected(), 2);
+                query.result = searcher.getResult(query, useStemming.isSelected(),
+                        semanticsCheckBox.isSelected(), Integer.parseInt(synonymsCountTextField.getText()));
                 queries.add(query);
                 displayQueryResult();
             }
@@ -660,8 +697,21 @@ public class Controller implements Initializable {
             //  if the query entering method is by selecting a query file (multiple queries)
             else {
                 addQueries();
-                for (Query query : queries)
-                    query.result = searcher.getResult(query, useStemming.isSelected(), semanticsCheckBox.isSelected(), 2);
+                // run tasks
+                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+
+                for (Query query : queries) {
+                    System.out.println(query.num + ": " + query.title);
+                    executor.execute(new QueryTask(query, searcher));
+//                    query.result = searcher.getResult(query, useStemming.isSelected(),
+//                            semanticsCheckBox.isSelected(), Integer.parseInt(synonymsCountTextField.getText()));
+                }
+                try {
+                    executor.shutdown();
+                    executor.awaitTermination(1, TimeUnit.HOURS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 setQueriesChoiceBox();
                 querySelectChoiceBox.setVisible(true);
             }
@@ -669,9 +719,43 @@ public class Controller implements Initializable {
             saveResultsButton.setDisable(false);
             entitiesTable.getItems().clear();
 
+            DecimalFormat formatter = new DecimalFormat("#,###");
+            String seconds = formatter.format((System.currentTimeMillis() - startTime)/1000.0);
+            showComment(commentsQueryBox, "GREEN", "seconds = " + seconds);
+
         }catch (Exception e) {
             showComment(commentsQueryBox,"RED", e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * For processing queries in parallel
+     */
+    private class QueryTask implements Runnable{
+
+        private Query query; // to process
+        private Searcher searcher; // to process with
+
+        /**
+         * Constructor
+         * @param query to process
+         * @param searcher to process with
+         */
+        public QueryTask(Query query, Searcher searcher) {
+            this.query = query;
+            this.searcher = searcher;
+        }
+
+        @Override
+        public void run() {
+            try {
+                query.result = searcher.getResult(query, useStemming.isSelected(),
+                        semanticsCheckBox.isSelected(), Integer.parseInt(synonymsCountTextField.getText()));
+            } catch (IOException e) {
+                showComment(commentsQueryBox, "RED", e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 
@@ -685,8 +769,8 @@ public class Controller implements Initializable {
             Document queryStructure = Jsoup.parse(queryString, "", Parser.xmlParser());
             query.num = queryStructure.select("num").text().split(" ")[1];
             query.title = queryStructure.select("title").text();
-            query.desc = queryStructure.select("desc").text();
-            query.narr = queryStructure.select("narr").text();
+            query.desc = queryStructure.select("desc").text().replace("Description:", "");;
+            query.narr = queryStructure.select("narr").text().replace("Narrative:", "");;
             queries.add(query);
         }
     }

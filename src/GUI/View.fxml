@@ -81,53 +81,58 @@
                                 </MenuItem>
                             </items>
                         </Menu>
-                  <Menu mnemonicParsing="false" text="Parameters">
-                    <items>
-                        <Menu mnemonicParsing="false" text="BM25">
-                           <items>
-                              <MenuItem mnemonicParsing="false" text="= K ">
-                                 <graphic>
-                                    <TextField fx:id="KTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setKforBM25" prefWidth="50.0" promptText="integer" text="1.2" />
-                                 </graphic>
-                              </MenuItem>
-                              <MenuItem mnemonicParsing="false" text="= b">
-                                 <graphic>
-                                    <TextField fx:id="bTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setBforBM25" prefWidth="50.0" promptText="double [0,1]" text="0.75" />
-                                 </graphic>
-                              </MenuItem>
-                           </items>
+                        <Menu mnemonicParsing="false" text="Parameters">
+                            <items>
+                                <Menu mnemonicParsing="false" text="BM25">
+                                    <items>
+                                        <MenuItem mnemonicParsing="false" text="= K ">
+                                            <graphic>
+                                                <TextField fx:id="KTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setKforBM25" prefWidth="50.0" promptText="integer" text="1.6" />
+                                            </graphic>
+                                        </MenuItem>
+                                        <MenuItem mnemonicParsing="false" text="= b">
+                                            <graphic>
+                                                <TextField fx:id="bTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setBforBM25" prefWidth="50.0" promptText="double [0,1]" text="0.2" />
+                                            </graphic>
+                                        </MenuItem>
+                                    </items>
+                                </Menu>
+                                <MenuItem mnemonicParsing="false" text="= result size">
+                                    <graphic>
+                                        <TextField fx:id="resultSizeTextField" nodeOrientation="LEFT_TO_RIGHT" prefWidth="50.0" promptText="integer" text="50" />
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false" text="= synonyms count">
+                                    <graphic>
+                                        <TextField fx:id="synonymsCountTextField" nodeOrientation="LEFT_TO_RIGHT" prefWidth="50.0" promptText="integer" text="2" />
+                                    </graphic>
+                                </MenuItem>
+                            </items>
                         </Menu>
-                        <MenuItem mnemonicParsing="false" text="= result size">
-                           <graphic>
-                              <TextField fx:id="resultSizeTextField" nodeOrientation="LEFT_TO_RIGHT" prefWidth="50.0" promptText="integer" text="50" />
-                           </graphic>
-                        </MenuItem>
-                    </items>
-                  </Menu>
-                  <Menu mnemonicParsing="false" text="Search">
-                    <items>
-                        <MenuItem mnemonicParsing="false">
-                           <graphic>
-                              <TextField fx:id="searchTermPostingsTextField" promptText="Enter term" />
-                           </graphic>
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="false">
-                           <graphic>
-                              <Button fx:id="searchTermPostingsButton" mnemonicParsing="false" onAction="#searchTermPostings" text="Get term postings" />
-                           </graphic>
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="false">
-                           <graphic>
-                              <TextField fx:id="searchDocumentTextField" promptText="Enter document ID" />
-                           </graphic>
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="false">
-                           <graphic>
-                              <Button fx:id="searchDocumentButton" mnemonicParsing="false" onAction="#searchDocument" text="Print document text" />
-                           </graphic>
-                        </MenuItem>
-                    </items>
-                  </Menu>
+                        <Menu mnemonicParsing="false" text="Search">
+                            <items>
+                                <MenuItem mnemonicParsing="false">
+                                    <graphic>
+                                        <TextField fx:id="searchTermPostingsTextField" promptText="Enter term" />
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false">
+                                    <graphic>
+                                        <Button fx:id="searchTermPostingsButton" mnemonicParsing="false" onAction="#searchTermPostings" text="Get term postings" />
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false">
+                                    <graphic>
+                                        <TextField fx:id="searchDocumentTextField" promptText="Enter document ID" />
+                                    </graphic>
+                                </MenuItem>
+                                <MenuItem mnemonicParsing="false">
+                                    <graphic>
+                                        <Button fx:id="searchDocumentButton" mnemonicParsing="false" onAction="#searchDocument" text="Print document text" />
+                                    </graphic>
+                                </MenuItem>
+                            </items>
+                        </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
                                 <MenuItem mnemonicParsing="false">
@@ -254,6 +259,7 @@
                                 <Insets right="5.0" />
                             </GridPane.margin>
                         </Button>
+                  <Button fx:id="trecevalButton" mnemonicParsing="false" onAction="#printTreceval" text="treceval" GridPane.columnIndex="3" GridPane.rowIndex="3" />
                     </children>
                     <BorderPane.margin>
                         <Insets left="5.0" />
@@ -315,11 +321,11 @@
                                     </font>
                                 </Text>
                                 <Text fill="#646464" strokeType="OUTSIDE" strokeWidth="0.0" text="Query Results:" />
-                        <ComboBox fx:id="querySelectChoiceBox" onAction="#querySelected" prefHeight="25.0" prefWidth="169.0" promptText="Select query" style="-fx-background-color: #41be69;" GridPane.columnIndex="1">
-                           <GridPane.margin>
-                              <Insets bottom="5.0" />
-                           </GridPane.margin>
-                        </ComboBox>
+                                <ComboBox fx:id="querySelectChoiceBox" onAction="#querySelected" prefHeight="25.0" prefWidth="169.0" promptText="Select query" style="-fx-background-color: #41be69;" GridPane.columnIndex="1">
+                                    <GridPane.margin>
+                                        <Insets bottom="5.0" />
+                                    </GridPane.margin>
+                                </ComboBox>
                             </children>
                             <padding>
                                 <Insets left="5.0" />

@@ -69,7 +69,7 @@ public class Searcher {
      */
     private Semantic semantic;
 
-    private HashMap<String, String> synonymsMap;
+    private ConcurrentHashMap<String, String> synonymsMap;
 
 
     /**
@@ -93,7 +93,7 @@ public class Searcher {
         this.k = k;
         this.b = b;
         this.resultSize = resultSize;
-        this.synonymsMap = new HashMap<>();
+        this.synonymsMap = new ConcurrentHashMap<>();
     }
 
     /**
@@ -162,6 +162,7 @@ public class Searcher {
         // Add synonymsMap in case of semantics
         String queryText = query.title;
         if (useSemantics) queryText = addSynonyms(queryText, synonymsCount);
+        queryText += " " + query.desc;
 
         // get terms from query
         LinkedList<String> parsedSentence = indexer.getParsedSentence(queryText, stopWords, useStemming);
@@ -255,7 +256,7 @@ public class Searcher {
      * @param termPostings list to add the postings to
      * @param filterByCities true to not add the docs that are not in the set of selected docs
      */
-    private void searchAndAddTermPostings(String term, long pointer,ArrayList<String[]> termPostings,
+    private void searchAndAddTermPostings(String term, long pointer, ArrayList<String[]> termPostings,
                                           boolean filterByCities) throws IOException {
 
         RandomAccessFile reader = new RandomAccessFile(indexPath + "\\postings\\" + term.charAt(0), "rw");

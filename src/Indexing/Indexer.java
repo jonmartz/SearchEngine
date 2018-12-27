@@ -717,7 +717,7 @@ public class Indexer {
             @Override
             public int compare(Entity o1, Entity o2) {
                 if (o1.tf > o2.tf) return 1;
-                if (o1.tf< o2.tf) return -1;
+                if (o1.tf < o2.tf) return -1;
                 if (o1.firstPos > o2.firstPos) return -1;
                 if (o1.firstPos < o2.firstPos) return 1;
                 return 0;
