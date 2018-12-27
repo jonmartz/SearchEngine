@@ -58,7 +58,7 @@ public class Searcher {
     /**
      * indicates how many docs to retrieve as result for a query
      */
-    private final int resultSize;
+    private int resultSize;
 
     // for BM25
     private double k;
@@ -259,10 +259,10 @@ public class Searcher {
     private void searchAndAddTermPostings(String term, long pointer, ArrayList<String[]> termPostings,
                                           boolean filterByCities) throws IOException {
 
-        RandomAccessFile reader = new RandomAccessFile(indexPath + "\\postings\\" + term.charAt(0), "rw");
+        BufferedRandomAccessFile reader = new BufferedRandomAccessFile(indexPath + "\\postings\\" + term.charAt(0), "rw");
         reader.seek(pointer);
         String line;
-        while ((line = reader.readLine()) != null && line.length() > 1) {
+        while ((line = reader.getNextLine()) != null && line.length() > 1) {
             String[] strings = line.split("\\|");
 
             // posting like this: docID, inTitle, tf, positionsInDoc

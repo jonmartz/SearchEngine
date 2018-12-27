@@ -445,8 +445,8 @@ public class Controller implements Initializable {
             if (dictionaryView.getItems() != null) dictionaryView.setVisible(true);
             queryPane.setVisible(true);
         }
-        if (useStemming.isSelected()) bTextField.setText("0.38");
-        else bTextField.setText("0.2");
+//        if (useStemming.isSelected()) bTextField.setText("0.04");
+//        else bTextField.setText("0.2");
     }
 
     /**

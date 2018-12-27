@@ -92,7 +92,7 @@
                                         </MenuItem>
                                         <MenuItem mnemonicParsing="false" text="= b">
                                             <graphic>
-                                                <TextField fx:id="bTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setBforBM25" prefWidth="50.0" promptText="double [0,1]" text="0.2" />
+                                                <TextField fx:id="bTextField" nodeOrientation="LEFT_TO_RIGHT" onKeyReleased="#setBforBM25" prefWidth="50.0" promptText="double [0,1]" text="0.38" />
                                             </graphic>
                                         </MenuItem>
                                     </items>
