@@ -2,6 +2,11 @@ package Retrieval;
 
 import java.io.*;
 
+/**
+ * Class was taken from:
+ * https://www.javaworld.com/article/2077523/build-ci-sdlc/java-tip-26--how-to-improve-java-s-i-o-performance.html
+ * So no documentation was added to the functions.
+ */
 public class BufferedRandomAccessFile extends RandomAccessFile {
 
     private int BUF_SIZE;

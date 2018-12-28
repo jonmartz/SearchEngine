@@ -138,10 +138,6 @@ public class Controller implements Initializable {
      */
     private ArrayList<Query> queries;
 
-    // parameters for BM25:
-    private double K;
-    private double b;
-
     // for our own use
     private String termToSearchPostings;
 
@@ -167,9 +163,6 @@ public class Controller implements Initializable {
         // entities table
         entitiesEntityCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("entity"));
         entitiesRankCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("rank"));
-
-        setKforBM25();
-        setBforBM25();
     }
 
     /**
@@ -436,6 +429,8 @@ public class Controller implements Initializable {
      * Also modify the K for BM25 value, cause we found its different for each mode for better results.
      */
     public void pressedStemming() {
+
+        // Check what to hide
         if ((usedStemming && !useStemming.isSelected()) || (!usedStemming && useStemming.isSelected())) {
             statsVisible(false);
             dictionaryView.setVisible(false);
@@ -445,29 +440,15 @@ public class Controller implements Initializable {
             if (dictionaryView.getItems() != null) dictionaryView.setVisible(true);
             queryPane.setVisible(true);
         }
-//        if (useStemming.isSelected()) bTextField.setText("0.04");
-//        else bTextField.setText("0.2");
-    }
 
-    /**
-     * Set the K parameter for the BM25 formula. is called after something is inserted in textbox
-     */
-    public void setKforBM25() {
-        try{
-            K = Double.parseDouble(KTextField.getText());
-        } catch (NumberFormatException e) {
-            showComment(commentsBox, "RED", "K must be a double");
+        // set optimal parameters for BM25
+        if (useStemming.isSelected()){
+            KTextField.setText("1.6");
+            bTextField.setText("0.38");
         }
-    }
-
-    /**
-     * Set the b parameter for the BM25 formula. is called after something is inserted in textbox
-     */
-    public void setBforBM25() {
-        try{
-            b = Double.parseDouble(bTextField.getText());
-        } catch (NumberFormatException e) {
-            showComment(commentsBox, "RED", "b must be a double");
+        else{
+            KTextField.setText("1.0");
+            bTextField.setText("0.7");
         }
     }
 
@@ -478,7 +459,9 @@ public class Controller implements Initializable {
         try {
             String path = getIndexFullPath();
             int resultSize = Integer.parseInt(resultSizeTextField.getText());
-            Searcher searcher = new Searcher(dictionary, path, getSelectedCities(), K, b, resultSize);
+            Searcher searcher = new Searcher(dictionary, path, getSelectedCities(),
+                    Double.parseDouble(KTextField.getText()), Double.parseDouble(bTextField.getText())
+                    , resultSize, semanticsCheckBox.isSelected());
             Indexer tempIndexer = new Indexer(path);
             HashSet<String> stopWords = searcher.getStopWords();
             String text = searchTermPostingsTextField.getText();
@@ -505,7 +488,9 @@ public class Controller implements Initializable {
      */
     public void searchDocument() throws IOException {
         int resultSize = Integer.parseInt(resultSizeTextField.getText());
-        Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b, resultSize);
+        Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(),
+                Double.parseDouble(KTextField.getText()), Double.parseDouble(bTextField.getText())
+                , resultSize, semanticsCheckBox.isSelected());
         String docID = searchDocumentTextField.getText();
         System.out.println(searcher.getDocString(corpusPath, docID));
     }
@@ -679,7 +664,9 @@ public class Controller implements Initializable {
         try {
             long startTime = System.currentTimeMillis();
             int resultSize = Integer.parseInt(resultSizeTextField.getText());
-            Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(), K, b, resultSize);
+            Searcher searcher = new Searcher(dictionary, getIndexFullPath(), getSelectedCities(),
+                    Double.parseDouble(KTextField.getText()), Double.parseDouble(bTextField.getText())
+                    , resultSize, semanticsCheckBox.isSelected());
             queries = new ArrayList<>();
 
             // if the query entering method is by entering it in the text field (single query)
@@ -689,7 +676,7 @@ public class Controller implements Initializable {
                 query.num = "000";
                 query.title = queryTextField.getText();
                 query.result = searcher.getResult(query, useStemming.isSelected(),
-                        semanticsCheckBox.isSelected(), Integer.parseInt(synonymsCountTextField.getText()));
+                        Integer.parseInt(synonymsCountTextField.getText()));
                 queries.add(query);
                 displayQueryResult();
             }
@@ -751,7 +738,7 @@ public class Controller implements Initializable {
         public void run() {
             try {
                 query.result = searcher.getResult(query, useStemming.isSelected(),
-                        semanticsCheckBox.isSelected(), Integer.parseInt(synonymsCountTextField.getText()));
+                        Integer.parseInt(synonymsCountTextField.getText()));
             } catch (IOException e) {
                 showComment(commentsQueryBox, "RED", e.getMessage());
                 e.printStackTrace();

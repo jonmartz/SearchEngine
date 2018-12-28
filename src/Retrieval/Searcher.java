@@ -20,6 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Searcher {
 
     /**
+     * to use semantics or not
+     */
+    private final boolean useSemantics;
+    /**
      * Dictionary of terms in index
      */
     private ConcurrentHashMap<String, long[]> dictionary;
@@ -82,7 +86,7 @@ public class Searcher {
      */
     public Searcher(ConcurrentHashMap<String, long[]> dictionary,
                     String indexPath, HashSet<String> selectedCities,
-                    double k, double b, int resultSize) throws IOException {
+                    double k, double b, int resultSize, boolean useSemantics) throws IOException {
         this.dictionary = dictionary;
         this.indexPath = indexPath;
         this.selectedCities = selectedCities;
@@ -94,6 +98,8 @@ public class Searcher {
         this.b = b;
         this.resultSize = resultSize;
         this.synonymsMap = new ConcurrentHashMap<>();
+        this.useSemantics = useSemantics;
+        if (useSemantics) semantic = new Semantic();
     }
 
     /**
@@ -117,7 +123,7 @@ public class Searcher {
         docCount = Integer.parseInt(stats[0]);
         averageDocLength = Double.parseDouble(stats[1]);
 
-        // read index
+        // read document index
         while ((line = reader.readLine()) != null) {
             String[] strings = (line + "\\|").split("\\|");
             String docID = strings[0];
@@ -157,12 +163,13 @@ public class Searcher {
      * @param useStemming true to use stemming
      * @return list of relevant documents
      */
-    public ArrayList<String> getResult(Query query, boolean useStemming, boolean useSemantics, int synonymsCount) throws IOException {
+    public ArrayList<String> getResult(Query query, boolean useStemming, int synonymsCount) throws IOException {
 
         // Add synonymsMap in case of semantics
         String queryText = query.title;
         if (useSemantics) queryText = addSynonyms(queryText, synonymsCount);
         queryText += " " + query.desc;
+//        queryText += " " + query.narr;
 
         // get terms from query
         LinkedList<String> parsedSentence = indexer.getParsedSentence(queryText, stopWords, useStemming);
@@ -189,7 +196,6 @@ public class Searcher {
      * @return query text with the added synonymsMap
      */
     private String addSynonyms(String queryText, int synonymsCount) throws IOException {
-        if (semantic == null) semantic = new Semantic();
         LinkedList<String> terms = indexer.getParsedSentence(queryText, stopWords, false);
         String newQueryText = "";
         for (String term : terms){
