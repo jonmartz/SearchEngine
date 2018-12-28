@@ -195,28 +195,18 @@ public class Searcher {
      * @param queryText to add synonymsMap to
      * @return query text with the added synonymsMap
      */
-    private String addSynonyms(String queryText, int synonymsCount) throws IOException {
+    private String addSynonyms(String queryText, int synonymsCount) {
         LinkedList<String> terms = indexer.getParsedSentence(queryText, stopWords, false);
         String newQueryText = "";
         for (String term : terms){
-            boolean alphabetic = true;
-            for (int i = 0; i < term.length(); i++) {
-                if (!Character.isAlphabetic(term.charAt(i))) {
-                    alphabetic = false;
-                    break;
-                }
+            ArrayList<String> termManyTimes = new ArrayList<>();
+            for (int i = 0; i < synonymsCount; i++){
+               termManyTimes.add(term);
             }
-            String synonymsString = "";
-            if (alphabetic) {
-                term = term.toLowerCase();
-                synonymsString = synonymsMap.get(term);
-                if (synonymsString == null) {
-                    synonymsString = semantic.getSynonyms(term, synonymsCount) + " ";
-                    synonymsMap.put(term, synonymsString);
-                }
-            }
-            newQueryText += term + " " + synonymsString;
+            String synonymsString = semantic.getSynonyms(term, synonymsCount);
+            newQueryText += String.join(" ",termManyTimes) + " " + synonymsString + " ";
         }
+//        System.out.println(newQueryText);
         return newQueryText;
     }
 

@@ -104,7 +104,7 @@
                                 </MenuItem>
                                 <MenuItem mnemonicParsing="false" text="= synonyms count">
                                     <graphic>
-                                        <TextField fx:id="synonymsCountTextField" nodeOrientation="LEFT_TO_RIGHT" prefWidth="50.0" promptText="integer" text="2" />
+                                        <TextField fx:id="synonymsCountTextField" nodeOrientation="LEFT_TO_RIGHT" prefWidth="50.0" promptText="integer" text="1" />
                                     </graphic>
                                 </MenuItem>
                             </items>

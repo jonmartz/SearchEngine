@@ -688,7 +688,7 @@ public class Controller implements Initializable {
                 ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
 
                 for (Query query : queries) {
-                    System.out.println(query.num + ": " + query.title);
+//                    System.out.println(query.num + ": " + query.title);
                     executor.execute(new QueryTask(query, searcher));
 //                    query.result = searcher.getResult(query, useStemming.isSelected(),
 //                            semanticsCheckBox.isSelected(), Integer.parseInt(synonymsCountTextField.getText()));

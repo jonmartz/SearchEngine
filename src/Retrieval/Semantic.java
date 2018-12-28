@@ -30,13 +30,15 @@ public class Semantic {
     }
 
     /**
-     * Get a string with the closest terms to term, ordered from closest to farthest
+     * Get a string with the closest terms to term, ordered from closest to farthest.
+     * If term is not in synonyms map, returns an empty string.
      * @param term to get synonyms of
      * @param synonymsCount size of result list
      * @return string with the synonyms delimited by " "
      */
     public String getSynonyms(String term, int synonymsCount){
         String[] synonymsOfTerm = synonyms.get(term);
+        if (synonymsOfTerm == null) return "";
         ArrayList<String> someSynonymsOfTerm = new ArrayList<>();
         for (int i = 0; i < Math.min(5, synonymsCount); i++){
             someSynonymsOfTerm.add(synonymsOfTerm[i]);
