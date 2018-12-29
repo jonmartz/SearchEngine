@@ -246,7 +246,7 @@
                             <GridPane.margin>
                                 <Insets right="5.0" />
                             </GridPane.margin></Button>
-                        <CheckBox fx:id="semanticsCheckBox" mnemonicParsing="false" text="Use Semantics" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
+                        <CheckBox fx:id="semanticsCheckBox" mnemonicParsing="false" text="Use Semantics" onAction="#pressedSemantics" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="2" />
                         <MenuButton fx:id="citiesMenu" mnemonicParsing="false" prefHeight="25.0" prefWidth="124.0" text="Cities" GridPane.columnIndex="3" GridPane.rowIndex="2">
                             <GridPane.margin>
                                 <Insets right="5.0" />

@@ -440,15 +440,29 @@ public class Controller implements Initializable {
             if (dictionaryView.getItems() != null) dictionaryView.setVisible(true);
             queryPane.setVisible(true);
         }
+        adjustBM25Parameters();
+    }
 
-        // set optimal parameters for BM25
-        if (useStemming.isSelected()){
-            KTextField.setText("1.6");
-            bTextField.setText("0.38");
-        }
-        else{
-            KTextField.setText("1.0");
-            bTextField.setText("0.7");
+    /**
+     * Sets the optimal parameters for BM25
+     */
+    private void adjustBM25Parameters() {
+        if (!semanticsCheckBox.isSelected()) {
+            if (useStemming.isSelected()) {
+                KTextField.setText("1.6");
+                bTextField.setText("0.38");
+            } else {
+                KTextField.setText("1.0");
+                bTextField.setText("0.7");
+            }
+        } else {
+            if (useStemming.isSelected()) {
+                KTextField.setText("0.717");
+                bTextField.setText("0.2");
+            } else {
+                KTextField.setText("0.7");
+                bTextField.setText("0.8");
+            }
         }
     }
 
@@ -515,6 +529,13 @@ public class Controller implements Initializable {
             System.out.println(line);
             if (i++ == 5) showComment(commentsQueryBox, "GREEN", line);
         }
+    }
+
+    /**
+     * Is called when pressing the semantics check box
+     */
+    public void pressedSemantics() {
+        adjustBM25Parameters();
     }
 
     /**
