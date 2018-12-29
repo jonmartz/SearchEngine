@@ -58,8 +58,8 @@ public class Ranker {
                     rankedDocs.put(docName, rankedDoc);
                 }
                 rankedDoc.value += value;
-                rankedDoc.intersection++;
-                if (Character.isUpperCase(term.charAt(0))) rankedDoc.entities++;
+//                rankedDoc.intersection++;
+//                if (Character.isUpperCase(term.charAt(0))) rankedDoc.entities++;
             }
         }
         // sort docs by rank
@@ -153,10 +153,10 @@ public class Ranker {
         public String name = "";
         /** value from all sorts of formula like BM25 */
         public double value = 0.0;
-        /** size of the intersection of Query and Doc */
-        public int intersection = 0;
-        /** number of terms that are in UpperCase in dictionary */
-        public int entities = 0;
+//        /** size of the intersection of Query and Doc */
+//        public int intersection = 0;
+//        /** number of terms that are in UpperCase in dictionary */
+//        public int entities = 0;
 
         public RankedDoc(String name) {
             this.name = name;
