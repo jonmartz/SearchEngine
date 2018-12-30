@@ -73,6 +73,9 @@ public class Searcher {
      */
     private Semantic semantic;
 
+    private ConcurrentHashMap<String, String> synonymsMap;
+
+
     /**
      * Constructor
      * @param dictionary of terms
@@ -94,6 +97,7 @@ public class Searcher {
         this.k = k;
         this.b = b;
         this.resultSize = resultSize;
+        this.synonymsMap = new ConcurrentHashMap<>();
         this.useSemantics = useSemantics;
         if (useSemantics) semantic = new Semantic();
     }
@@ -121,13 +125,12 @@ public class Searcher {
 
         // read document index
         while ((line = reader.readLine()) != null) {
-            String[] strings = (line + "|").split("\\|");
-            String docName = strings[0];
-            String docID = strings[strings.length-1];
+            String[] strings = (line + "\\|").split("\\|");
+            String docID = strings[0];
             // the filtering part:
             if (useFilter && !documents.containsKey(docID)) continue;
             //                  docLength   maxTf       city        language    date
-            String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7], docName};
+            String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7]};
             documents.put(docID,docData);
         }
         reader.close();
@@ -166,7 +169,7 @@ public class Searcher {
         String queryText = query.title;
         if (useSemantics) queryText = addSynonyms(queryText, synonymsCount);
         queryText += " " + query.desc;
-//        queryText += " " + query.narr;
+        queryText += " " + query.narr;
 
         // get terms from query
         LinkedList<String> parsedSentence = indexer.getParsedSentence(queryText, stopWords, useStemming);
@@ -184,16 +187,7 @@ public class Searcher {
         for (Map.Entry<String, ArrayList<Integer>> termEntry : terms.entrySet()){
             addPostings(termEntry, postings);
         }
-        ArrayList<String> rankedDocIDs = ranker.getRankedDocuments(postings, documents, k, b,
-                docCount, averageDocLength, resultSize);
-
-        // translate doc IDs to doc names
-        ArrayList<String> rankedDocNames = new ArrayList<>();
-        for (String docID : rankedDocIDs){
-            String[] docData = documents.get(docID);
-            rankedDocNames.add(docData[docData.length-1]);
-        }
-        return rankedDocNames;
+        return ranker.getRankedDocuments(postings, documents, k, b, docCount, averageDocLength, resultSize);
     }
 
     /**
@@ -201,18 +195,28 @@ public class Searcher {
      * @param queryText to add synonymsMap to
      * @return query text with the added synonymsMap
      */
-    private String addSynonyms(String queryText, int synonymsCount) {
+    private String addSynonyms(String queryText, int synonymsCount) throws IOException {
         LinkedList<String> terms = indexer.getParsedSentence(queryText, stopWords, false);
         String newQueryText = "";
         for (String term : terms){
-            ArrayList<String> termManyTimes = new ArrayList<>();
-            for (int i = 0; i < synonymsCount; i++){
-               termManyTimes.add(term);
+            boolean alphabetic = true;
+            for (int i = 0; i < term.length(); i++) {
+                if (!Character.isAlphabetic(term.charAt(i))) {
+                    alphabetic = false;
+                    break;
+                }
             }
-            String synonymsString = semantic.getSynonyms(term, synonymsCount);
-            newQueryText += String.join(" ",termManyTimes) + " " + synonymsString + " ";
+            String synonymsString = "";
+            if (alphabetic) {
+                term = term.toLowerCase();
+                synonymsString = synonymsMap.get(term);
+                if (synonymsString == null) {
+                    synonymsString = semantic.getSynonyms(term, synonymsCount) + " ";
+                    synonymsMap.put(term, synonymsString);
+                }
+            }
+            newQueryText += term + " " + synonymsString;
         }
-//        System.out.println(newQueryText);
         return newQueryText;
     }
 
@@ -225,7 +229,7 @@ public class Searcher {
      * @param postings to add the posting to
      */
     public void addPostings(Map.Entry<String, ArrayList<Integer>> termEntry,
-                             ArrayList<ArrayList<String[]>> postings) throws IOException {
+                            ArrayList<ArrayList<String[]>> postings) throws IOException {
 
         String term = termEntry.getKey();
         ArrayList<Integer> positions = termEntry.getValue();
@@ -334,7 +338,7 @@ public class Searcher {
         String file = "";
         int docPosition = 0;
         while ((line = reader.readLine()) != null) {
-            String[] strings = (line + "|").split("\\|");
+            String[] strings = (line + "\\|").split("\\|");
             if (strings[0].equals(docName)){
                 file = strings[1];
                 docPosition = Integer.parseInt(strings[2]);

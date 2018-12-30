@@ -102,11 +102,6 @@ public class Indexer {
     }
 
     /**
-     * Maps a document name to it's id (to make the postings much smaller)
-     */
-    private HashMap<String, String> documentIdMap;
-
-    /**
      * Constructor. Creating a Indexing.Indexer doesn't start the indexing process
      * @param index_path path of index directory
      */
@@ -277,7 +272,6 @@ public class Indexer {
 
         writeDictionary();
         dictionarySize = dictionary.size();
-        documentIdMap.clear();
 
 //        long time = System.currentTimeMillis() - start;
 //        System.out.println("total time: " + time);
@@ -413,8 +407,8 @@ public class Indexer {
                 ArrayList<String> docStrings = null;
 
                 try {
-                // each docString is a string containing everything from <DOC> to </DOC>
-                docStrings = ReadFile.read(filePath);
+                    // each docString is a string containing everything from <DOC> to </DOC>
+                    docStrings = ReadFile.read(filePath);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -485,7 +479,7 @@ public class Indexer {
                     // docname|file|positionInFile|termCount|maxTf|city|language|date
                     String[] line = {doc.name, doc.file, String.valueOf(doc.positionInFile),
                             String.valueOf(termPosition), String.valueOf(max_tf), doc.city, doc.language, doc.date};
-                    documentIndex.add(String.join("|", line));
+                    documentIndex.add(String.join("|", line) + "\n");
 
                     // if reached max docs per posting
                     if (fileCount == filesPerPosting) {
@@ -588,10 +582,9 @@ public class Indexer {
                         new FileInputStream(path), StandardCharsets.UTF_8));
                 postings.add(posting);
             }
-            StringBuilder stringBuilder = new StringBuilder();
             for (int i = 0; i < chars.length(); i++){
 
-                long start = System.currentTimeMillis();
+//                long start = System.currentTimeMillis();
 
                 char character = chars.charAt(i);
 
@@ -611,16 +604,6 @@ public class Indexer {
 
                         // Get term postings
                         while (line != null && !line.equals("")){
-                            // write the doc id instead of doc name to posting
-                            int charIndex = 0;
-                            char c;
-                            while ((c = line.charAt(charIndex++)) != '|'){
-                                stringBuilder.append(c);
-                            }
-                            String docName = stringBuilder.toString();
-                            stringBuilder = new StringBuilder();
-                            // here we replace doc name with doc id
-                            line = documentIdMap.get(docName) + line.substring(charIndex - 1, line.length());
                             termPostings.add(line);
                             line = posting.readLine();
                         }
@@ -655,8 +638,8 @@ public class Indexer {
                 }
                 mergedPosting.close();
 
-                long time = System.currentTimeMillis() - start;
-                System.out.println(character + " time: " + time);
+//                long time = System.currentTimeMillis() - start;
+//                System.out.println(character + " time: " + time);
             }
             for (BufferedReader posting : postings) posting.close();
             removeDir(Paths.get(index_path + "\\postings\\temp"));
@@ -667,11 +650,10 @@ public class Indexer {
          * Write all entities to disk
          */
         private void writeEntities() throws IOException {
-            HashMap<String, String> docIDtoDocName = getdocIDtoDocNameMap();
             String path = index_path + "\\entities";
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path, false)));
             for (Map.Entry<String, PriorityQueue<Entity>> entry: entitiesMap.entrySet()) {
-                String docID = entry.getKey();
+                String docName = entry.getKey();
                 PriorityQueue<Entity> entities = entry.getValue();
                 LinkedList<String> entityNames = new LinkedList<>();
                 // write entities in reversed order because they were sorted from least to most dominant in queue
@@ -679,7 +661,7 @@ public class Indexer {
                     Entity entity = entities.poll();
                     entityNames.addFirst(entity.name);
                 }
-                String line = docIDtoDocName.get(docID) + "|" + String.join(",", entityNames) + "\n";
+                String line = docName + "|" + String.join(",", entityNames) + "\n";
                 out.write(line);
             }
             out.close();
@@ -744,18 +726,6 @@ public class Indexer {
     }
 
     /**
-     * Get a map that maps doc id to doc name
-     * @return map
-     */
-    private HashMap<String, String> getdocIDtoDocNameMap() {
-        HashMap<String, String> map = new HashMap<>();
-        for (Map.Entry<String, String> entry : documentIdMap.entrySet()){
-            map.put(entry.getValue(), entry.getKey());
-        }
-        return map;
-    }
-
-    /**
      * Writes the city index to disk
      */
     private void writeCityIndex() throws IOException {
@@ -800,21 +770,14 @@ public class Indexer {
      * First line of documents file is: docCount,avgDocLength
      */
     private void writeDocumentsAndLanguagesIndex() throws IOException {
-        documentIdMap = new HashMap<>();
         String[] documentsPath = {index_path, "documents"};
         SortedSet<String> lines = new TreeSet<>(documentIndex);
         double sumOfDocLengths = 0;
-        int i = 0;
         for (String line : lines){
             String[] data = line.split("\\|");
-            if (data.length >= 7) { // if document has language
-                String language = data[6].trim();
-                if (language.length() > 0) languages.add(language);
-            }
+            String language = data[6].trim();
+            if (language.length() > 0) languages.add(language);
             sumOfDocLengths += Double.valueOf(data[3]);
-            String docID = convertToBase92(i++);
-            documentIdMap.put(data[0], docID);
-
         }
 
         // write docs index
@@ -822,11 +785,7 @@ public class Indexer {
                 new FileOutputStream(String.join("\\", documentsPath), true)));
         // first line is: docCount,avgDocLength
         out.write((int)documentCount + "," + sumOfDocLengths/documentCount + "\n");
-        i = 0;
-        for (String line : lines) {
-            String[] strings = {line, convertToBase92(i++)};
-            out.write(String.join("|", strings) + "\n");
-        }
+        for (String line : lines) out.write(line);
         out.close();
 
         // write languages index
@@ -834,19 +793,6 @@ public class Indexer {
         out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.join("\\", languagesPath), true)));
         for (String line : languages) out.write(line + "\n");
         out.close();
-    }
-
-    /**
-     * Get a char representation of integer i in base 92.
-     * We use 92 different chars, from char number 32 to 123 (124 is our delimiter).
-     * @param number to convert
-     * @return char representation of i
-     */
-    private static String convertToBase92(int number) {
-        int quotient = number / 92;
-        int remainder = number % 92;
-        if (quotient == 0) return String.valueOf((char)(remainder + 32));
-        else return convertToBase92(quotient - 1) + String.valueOf((char)(remainder + 32));
     }
 
     //      ----- query part -----
