@@ -73,9 +73,6 @@ public class Searcher {
      */
     private Semantic semantic;
 
-    private ConcurrentHashMap<String, String> synonymsMap;
-
-
     /**
      * Constructor
      * @param dictionary of terms
@@ -97,7 +94,6 @@ public class Searcher {
         this.k = k;
         this.b = b;
         this.resultSize = resultSize;
-        this.synonymsMap = new ConcurrentHashMap<>();
         this.useSemantics = useSemantics;
         if (useSemantics) semantic = new Semantic();
     }
@@ -125,12 +121,13 @@ public class Searcher {
 
         // read document index
         while ((line = reader.readLine()) != null) {
-            String[] strings = (line + "\\|").split("\\|");
-            String docID = strings[0];
+            String[] strings = (line + "|").split("\\|");
+            String docName = strings[0];
+            String docID = strings[strings.length-1];
             // the filtering part:
             if (useFilter && !documents.containsKey(docID)) continue;
             //                  docLength   maxTf       city        language    date
-            String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7]};
+            String[] docData = {strings[3], strings[4], strings[5], strings[6], strings[7], docName};
             documents.put(docID,docData);
         }
         reader.close();
@@ -187,7 +184,16 @@ public class Searcher {
         for (Map.Entry<String, ArrayList<Integer>> termEntry : terms.entrySet()){
             addPostings(termEntry, postings);
         }
-        return ranker.getRankedDocuments(postings, documents, k, b, docCount, averageDocLength, resultSize);
+        ArrayList<String> rankedDocIDs = ranker.getRankedDocuments(postings, documents, k, b,
+                docCount, averageDocLength, resultSize);
+
+        // translate doc IDs to doc names
+        ArrayList<String> rankedDocNames = new ArrayList<>();
+        for (String docID : rankedDocIDs){
+            String[] docData = documents.get(docID);
+            rankedDocNames.add(docData[docData.length-1]);
+        }
+        return rankedDocNames;
     }
 
     /**
@@ -328,7 +334,7 @@ public class Searcher {
         String file = "";
         int docPosition = 0;
         while ((line = reader.readLine()) != null) {
-            String[] strings = (line + "\\|").split("\\|");
+            String[] strings = (line + "|").split("\\|");
             if (strings[0].equals(docName)){
                 file = strings[1];
                 docPosition = Integer.parseInt(strings[2]);

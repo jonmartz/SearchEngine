@@ -39,10 +39,10 @@ public class Ranker {
 
                 // get doc posting data
                 String[] docPosting = posting.get(i);
-                String docName = docPosting[0];
+                String docID = docPosting[0];
                 String inTitle = docPosting[1];
                 int tf = Integer.parseInt(docPosting[2]);
-                int docLength = Integer.parseInt(documents.get(docName)[0]);
+                int docLength = Integer.parseInt(documents.get(docID)[0]);
                 long[] positionsInDoc = toLongArray(docPosting[3].trim().split(" "));
 
                 // Calculate all rank factors of doc
@@ -52,10 +52,10 @@ public class Ranker {
 //                if (inTitle.equals("t")) value *= 2; // being in title is important!
 
                 // update rank of doc
-                RankedDoc rankedDoc = rankedDocs.get(docName);
+                RankedDoc rankedDoc = rankedDocs.get(docID);
                 if (rankedDoc == null) {
-                    rankedDoc = new RankedDoc(docName);
-                    rankedDocs.put(docName, rankedDoc);
+                    rankedDoc = new RankedDoc(docID);
+                    rankedDocs.put(docID, rankedDoc);
                 }
                 rankedDoc.value += value;
 //                rankedDoc.intersection++;
@@ -67,14 +67,14 @@ public class Ranker {
         sortedRankedDocs.addAll(rankedDocs.values());
 
         // get top (resultSize) or less
-        ArrayList<String> topRankedDocNames = new ArrayList<>();
+        ArrayList<String> topRankedDocIDs = new ArrayList<>();
         int count = 0;
         for (RankedDoc rankedDoc : sortedRankedDocs){
-            topRankedDocNames.add(rankedDoc.name);
+            topRankedDocIDs.add(rankedDoc.ID);
             count++;
             if (count == resultSize) break;
         }
-        return topRankedDocNames;
+        return topRankedDocIDs;
     }
 
     /**
@@ -150,7 +150,7 @@ public class Ranker {
      */
     private class RankedDoc {
         /** name of doc */
-        public String name = "";
+        public String ID = "";
         /** value from all sorts of formula like BM25 */
         public double value = 0.0;
 //        /** size of the intersection of Query and Doc */
@@ -158,8 +158,8 @@ public class Ranker {
 //        /** number of terms that are in UpperCase in dictionary */
 //        public int entities = 0;
 
-        public RankedDoc(String name) {
-            this.name = name;
+        public RankedDoc(String ID) {
+            this.ID = ID;
         }
     }
 }
