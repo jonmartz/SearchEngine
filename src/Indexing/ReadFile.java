@@ -57,15 +57,21 @@ public class ReadFile {
             if (line.contains("<top>")) {
                 stringBuilder.append(line + "\n");
                 line = reader.readLine();
+                boolean inNarr = false;
                 while (line != null && !line.contains("</top>")) {
-                    if (line.contains("<title>")) stringBuilder.append("</num>");
-                    if (line.contains("<desc>")) stringBuilder.append("</title>");
-                    if (line.contains("<narr>")) stringBuilder.append("</desc>");
+                    if (!line.isEmpty()) {
+                        if (line.contains("<narr>")) inNarr = true;
+                        line = line.replace("<title>", "</num><title>");
+                        line = line.replace("<desc>", "</title><desc>");
+                        line = line.replace("<narr>", "</desc><narr>");
+                    } else if (inNarr) {
+                        line = ";";
+                    }
                     stringBuilder.append(line + "\n");
                     line = reader.readLine();
                 }
                 if (line != null && line.contains("</top>")){
-                    stringBuilder.append("</narr>");
+                    line = line.replace("<top>", "</narr><top>");
                     stringBuilder.append(line);
                     queriesInFile.add(stringBuilder.toString());
                     stringBuilder = new StringBuilder();

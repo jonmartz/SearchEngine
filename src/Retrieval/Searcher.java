@@ -168,8 +168,8 @@ public class Searcher {
         // Add synonymsMap in case of semantics
         String queryText = query.title;
         if (useSemantics) queryText = addSynonyms(queryText, synonymsCount);
-        queryText += " " + query.desc;
-        queryText += " " + query.narr;
+        queryText += " " + cleanQueryContent(query.desc);
+        queryText += " " + cleanQueryContent(cleanNonRelevant(query.narr));
 
         // get terms from query
         LinkedList<String> parsedSentence = indexer.getParsedSentence(queryText, stopWords, useStemming);
@@ -188,6 +188,42 @@ public class Searcher {
             addPostings(termEntry, postings);
         }
         return ranker.getRankedDocuments(postings, documents, k, b, docCount, averageDocLength, resultSize);
+    }
+
+    /**
+     * Returns text content without the common query desc words
+     * @param text to clean
+     * @return cleaned content
+     */
+    private String cleanQueryContent(String text) {
+        text = text.replace("information"," ");
+        text = text.replace("Information"," ");
+        text = text.replace("document"," ");
+        text = text.replace("Document"," ");
+        text = text.replace("considered"," ");
+        text = text.replace("Considered"," ");
+        text = text.replace("issue"," ");
+        text = text.replace("Issue"," ");
+        return text;
+    }
+
+    /**
+     * Remove from text the sentences that describe what info is not relevant for query.
+     * The sentences are separated by '.'
+     * @param text to clean
+     * @return cleaned text
+     */
+    private static String cleanNonRelevant(String text) {
+        String[] sentences = text.split("[,;.?!:]");
+        ArrayList<String> cleanSentences = new ArrayList<>();
+        for (String sentence : sentences){
+            if (!(sentence.contains("not relevant")
+                    ||sentence.contains("not be relevant")
+                    ||sentence.contains("irrelevant"))){
+                cleanSentences.add(sentence);
+            }
+        }
+        return String.join(" ", cleanSentences);
     }
 
     /**
@@ -348,7 +384,6 @@ public class Searcher {
         reader.close();
         if (file.isEmpty()) return null;
         ArrayList<String> docsInFile = ReadFile.read(corpusPath + "\\" + file + "\\" + file);
-//        return Jsoup.parse(docsInFile.get(docPosition), "", Parser.xmlParser());
         return docsInFile.get(docPosition);
     }
 }

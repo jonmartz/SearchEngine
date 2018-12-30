@@ -163,6 +163,8 @@ public class Controller implements Initializable {
         // entities table
         entitiesEntityCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("entity"));
         entitiesRankCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("rank"));
+
+        adjustBM25Parameters();
     }
 
     /**
@@ -448,20 +450,20 @@ public class Controller implements Initializable {
      */
     private void adjustBM25Parameters() {
         if (!semanticsCheckBox.isSelected()) {
-            if (useStemming.isSelected()) {
-                KTextField.setText("1.6");
-                bTextField.setText("0.38");
-            } else {
+            if (!useStemming.isSelected()) {
                 KTextField.setText("1.0");
-                bTextField.setText("0.7");
-            }
-        } else {
-            if (useStemming.isSelected()) {
-                KTextField.setText("0.717");
-                bTextField.setText("0.2");
+                bTextField.setText("0.585");
             } else {
                 KTextField.setText("0.7");
+                bTextField.setText("0.59");
+            }
+        } else {
+            if (!useStemming.isSelected()) {
+                KTextField.setText("0.7");
                 bTextField.setText("0.8");
+            } else {
+                KTextField.setText("0.7");
+                bTextField.setText("0.73");
             }
         }
     }
@@ -775,10 +777,10 @@ public class Controller implements Initializable {
         for (String queryString : queryStrings) {
             Query query = new Query();
             Document queryStructure = Jsoup.parse(queryString, "", Parser.xmlParser());
-            query.num = queryStructure.select("num").text().split(" ")[1];
+            query.num = queryStructure.select("num").text().replace("Number:", "").trim();
             query.title = queryStructure.select("title").text();
-            query.desc = queryStructure.select("desc").text().replace("Description:", "");;
-            query.narr = queryStructure.select("narr").text().replace("Narrative:", "");;
+            query.desc = queryStructure.select("desc").text().replace("Description:", "");
+            query.narr = queryStructure.select("narr").text().replace("Narrative:", "");
             queries.add(query);
         }
     }

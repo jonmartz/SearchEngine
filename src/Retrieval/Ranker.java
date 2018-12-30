@@ -43,7 +43,7 @@ public class Ranker {
                 String inTitle = docPosting[1];
                 int tf = Integer.parseInt(docPosting[2]);
                 int docLength = Integer.parseInt(documents.get(docID)[0]);
-                long[] positionsInDoc = toLongArray(docPosting[3].trim().split(" "));
+//                long[] positionsInDoc = toLongArray(docPosting[3].trim().split(" "));
 
                 // Calculate all rank factors of doc
                 double value = 1;
