@@ -4,6 +4,10 @@ import java.util.*;
 
 /**
  * Responsible for ranking a set of documents for a given query.
+ *
+ * SOME CODE SECTIONS WHERE LEFT COMMENTED OUT EVEN THOUGH WE DIDNT END UP USING THEM,
+ * TO SHOW SOME OF THE STUFF WE TRIED TO ADD AS RANKING FACTORS. IN THE END ANYTHING
+ * BESIDES THE BM25 ENDED UP WORSENING THE QUALITY OF THE RESULTS.
  */
 public class Ranker {
 
