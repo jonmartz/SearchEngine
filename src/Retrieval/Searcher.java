@@ -213,7 +213,7 @@ public class Searcher {
      * @param text to clean
      * @return cleaned text
      */
-    private static String cleanNonRelevant(String text, boolean stemming) {
+    private String cleanNonRelevant(String text, boolean stemming) {
         String[] sentences = text.split("[,;.?!:]");
         ArrayList<String> cleanSentences = new ArrayList<>();
         for (String sentence : sentences){

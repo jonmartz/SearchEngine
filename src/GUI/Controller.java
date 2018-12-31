@@ -164,7 +164,7 @@ public class Controller implements Initializable {
         entitiesEntityCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("entity"));
         entitiesRankCol.setCellValueFactory(new PropertyValueFactory<DictEntry, String>("rank"));
 
-        adjustBM25Parameters();
+//        adjustBM25Parameters();
     }
 
     /**
