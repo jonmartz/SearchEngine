@@ -169,7 +169,7 @@ public class Searcher {
         String queryText = query.title;
         if (useSemantics) queryText = addSynonyms(queryText, synonymsCount);
         queryText += " " + cleanQueryContent(query.desc);
-        queryText += " " + cleanQueryContent(cleanNonRelevant(query.narr));
+        queryText += " " + cleanQueryContent(cleanNonRelevant(query.narr, useStemming));
 
         // get terms from query
         LinkedList<String> parsedSentence = indexer.getParsedSentence(queryText, stopWords, useStemming);
@@ -213,12 +213,13 @@ public class Searcher {
      * @param text to clean
      * @return cleaned text
      */
-    private static String cleanNonRelevant(String text) {
+    private static String cleanNonRelevant(String text, boolean stemming) {
         String[] sentences = text.split("[,;.?!:]");
         ArrayList<String> cleanSentences = new ArrayList<>();
         for (String sentence : sentences){
             if (!(sentence.contains("not relevant")
                     ||sentence.contains("not be relevant")
+                    ||(stemming && sentence.contains("non-relevant"))
                     ||sentence.contains("irrelevant"))){
                 cleanSentences.add(sentence);
             }

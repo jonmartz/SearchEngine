@@ -442,7 +442,7 @@ public class Controller implements Initializable {
             if (dictionaryView.getItems() != null) dictionaryView.setVisible(true);
             queryPane.setVisible(true);
         }
-        adjustBM25Parameters();
+//        adjustBM25Parameters();
     }
 
     /**
@@ -537,7 +537,7 @@ public class Controller implements Initializable {
      * Is called when pressing the semantics check box
      */
     public void pressedSemantics() {
-        adjustBM25Parameters();
+//        adjustBM25Parameters();
     }
 
     /**
