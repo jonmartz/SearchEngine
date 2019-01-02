@@ -140,6 +140,7 @@ public class Controller implements Initializable {
 
     // for our own use
     private String termToSearchPostings;
+    private boolean explainedHoverMouse = false;
 
     /**
      * Initializes the controller.
@@ -176,8 +177,21 @@ public class Controller implements Initializable {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(title);
         File file = directoryChooser.showDialog(null);
-        if (file != null) return file.getAbsolutePath();
+        if (file != null) {
+            explainHoverMouse();
+            return file.getAbsolutePath();
+        }
         return null;
+    }
+
+    /**
+     * Pop up explaining to hover mouse in button to see path
+     */
+    private void explainHoverMouse() {
+        if (!explainedHoverMouse){
+            explainedHoverMouse = true;
+            showPopUp("Hover mouse over browse buttons to see the path chosen");
+        }
     }
 
     /**
@@ -216,6 +230,15 @@ public class Controller implements Initializable {
     }
 
     /**
+     * Show pop up to user
+     * @param text to display in pop up
+     */
+    public void showPopUp(String text){
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, text);
+        alert.showAndWait();
+    }
+
+    /**
      * Loads into memory the dictionary from the index that's in the index indexPath. If there's no such index
      * then a message is displayed.
      * If "use stemming" is checked, will load the dicitonary from the "withStemming" indexPath, else from
@@ -250,6 +273,7 @@ public class Controller implements Initializable {
             setLanguages(path);
             setCities(path);
             showComment(commentsBox,"GREEN","Finished!");
+            showPopUp("Dictionary Loaded!");
             DecimalFormat formatter = new DecimalFormat("#,###");
             docCountValue.setText(formatter.format(documentCount));
             termCountValue.setText(formatter.format(dictionary.size()));
@@ -351,6 +375,7 @@ public class Controller implements Initializable {
         languageChoicebox.setItems(FXCollections.observableArrayList(indexer.getLanguages()));
         setCities(indexer.getCities());
         showComment(commentsBox,"GREEN","Finished!");
+        showPopUp("Index created!");
         DecimalFormat formatter = new DecimalFormat("#,###");
         docCountValue.setText(formatter.format(indexer.documentCount));
         termCountValue.setText(formatter.format(indexer.dictionarySize));
@@ -620,6 +645,7 @@ public class Controller implements Initializable {
                     indexer = null;
                     statsVisible(false);
                     commentsBox.setVisible(false);
+                    showPopUp("Index files removed");
                 }
             }
         } catch (Exception e) {
@@ -651,7 +677,10 @@ public class Controller implements Initializable {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(title);
         File file = fileChooser.showOpenDialog(null);
-        if (file != null) return file.getAbsolutePath();
+        if (file != null){
+            explainHoverMouse();
+            return file.getAbsolutePath();
+        }
         return null;
     }
 
@@ -677,6 +706,7 @@ public class Controller implements Initializable {
             }
         }
         out.close();
+        showPopUp("Results saved to disk");
     }
 
     /**
@@ -732,6 +762,7 @@ public class Controller implements Initializable {
             DecimalFormat formatter = new DecimalFormat("#,###");
             String seconds = formatter.format((System.currentTimeMillis() - startTime)/1000.0);
             showComment(commentsQueryBox, "GREEN", "seconds = " + seconds);
+            showPopUp("Query results are in!");
 
         }catch (Exception e) {
             showComment(commentsQueryBox,"RED", e.getMessage());

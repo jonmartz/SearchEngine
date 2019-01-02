@@ -1,9 +1,6 @@
 package Retrieval;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -19,9 +16,11 @@ public class Semantic {
      */
     public Semantic() throws IOException {
 
-        String path = "src\\Retrieval\\synonyms";
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(path), StandardCharsets.UTF_8));
+//        String path = "src\\Retrieval\\synonyms";
+        InputStream in = getClass().getResourceAsStream("/synonyms");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in,  StandardCharsets.UTF_8));
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(path), StandardCharsets.UTF_8));
         String line;
         while ((line = reader.readLine()) != null){
             String[] strings = line.split(": ");
